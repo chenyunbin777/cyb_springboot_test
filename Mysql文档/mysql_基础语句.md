@@ -1,9 +1,9 @@
 # Inner join
 select XXX from table1 inner join table2 on tables1.colum1 = tables2.clolum2;
 
-INNER JOIN（内连接,或等值连接）：获取两个表中字段匹配关系的记录。
-LEFT JOIN（左连接）：获取左表所有记录，即使右表没有对应匹配的记录。 **（常用）**
-RIGHT JOIN（右连接）： 与 LEFT JOIN 相反，用于获取右表所有记录，即使左表没有对应匹配的记录。
+- INNER JOIN（内连接,或等值连接）：获取两个表中字段匹配关系的记录。
+- LEFT JOIN（左连接）：获取左表所有记录，即使右表没有对应匹配的记录。 **（常用）**
+- RIGHT JOIN（右连接）： 与 LEFT JOIN 相反，用于获取右表所有记录，即使左表没有对应匹配的记录。
 
 > 注意：select * from a left join b on a.id = b.id where a.buyer = 'cyb'
 > on：是两个表连接的条件，从而生成一张临时表
