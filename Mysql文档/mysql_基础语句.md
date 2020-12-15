@@ -193,6 +193,9 @@ VALUES(6, 'pd1', 'cyb77777', 7, 10, 8);
   
 # 18 MySQL 运算符
 - mod
+- BETWEEN	在两值之间	>=min&&<=max
+- NOT BETWEEN	不在两值之间	
+- <>, !=不等于
 
 
 
