@@ -1,5 +1,9 @@
 # Redis安装
 https://blog.csdn.net/realize_dream/article/details/106227622
+## 目录
+/usr/local/bin:下放至Redis的命令
+/usr/local/etc：下放Redis的配置文件
+
 
 Mac安装Redis
 使用Homebrew安装Redis
