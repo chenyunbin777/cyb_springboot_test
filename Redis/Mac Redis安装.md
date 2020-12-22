@@ -11,11 +11,11 @@ Mac安装Redis
 打开终端输入以下命令：
 
 /bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"
-1
+
 2、使用Homebrew安装命令
 
 brew install redis
-1
+
 执行上述命令后出现以下，则成功安装：
 
 ==> Downloading https://mirrors.ustc.edu.cn/homebrew-bottles/bottles/redis-6.0.1
