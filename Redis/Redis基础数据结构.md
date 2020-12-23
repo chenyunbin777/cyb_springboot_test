@@ -39,6 +39,7 @@ redis-server --version
     - HVALS key：获取哈希表中所有值。**（field相当于HashMap的values()方法）**
     - HLEN key：获取哈希表中字段的数量
     - 例子
+    ``` 
         - HMSET runoobkey name "redis tutorial" description "redis basic commands for caching" likes 20 visitors 23000
         - hkeys runoobkey
           1) "name"
@@ -50,7 +51,7 @@ redis-server --version
           2) "redis basic commands for caching"
           3) "20"
           4) "23000"
-    
+    ``` 
 
 - 列表List（阻塞队列，优先级队列）
     - 1 LPUSH key value1 [value2] ：将一个或多个值插入到列表头部
@@ -81,6 +82,7 @@ redis-server --version
     - ZUNIONSTORE destination numkeys key [key ...]
     - ZSCAN key cursor [MATCH pattern] [COUNT count]
     - 练习：
+    ``` 
         - zadd cybSortedSet 100 cyb
         - zadd cybSortedSet 200 cyb2
         - zrange cybSortedSet 0 -1  //**-1代表最后一位，-2代表倒数第二个，一次类推**
@@ -101,7 +103,7 @@ redis-server --version
           (integer) 1
           ZREVRANK cybSortedSet cyb2
           (integer) 0
-
+    ``` 
 
 ## 如果你是Redis中高级用户，
 还需要加上下面几种数据结构
@@ -135,6 +137,7 @@ redis-server --version
     - geohash：返回一个或多个位置对象的 geohash 值。
     - 命令：GEOADD key longitude latitude member [longitude latitude member ...]
        - 例子：
+       ``` 
         - GEOADD position 116.20 39.56 beijing 120.2 30.3 hangzhou  添加北京，杭州经纬度
         - GEOPOS position beijing hangzhou  北京杭州经纬度
           1) 1) "116.19999736547470093"
@@ -149,10 +152,104 @@ redis-server --version
         - GEOHASH position beijing hangzhou  求某些地理位置的hash值
         - GEORADIUSBYMEMBER position beijing 1000 km / 2000 km  以北京为中心点 半径1000km/2000km范围内都有哪些城市
             "beijing"                                 1) "hangzhou"
-                                                      2) "beijing"
+        ```                                               2) "beijing"
+- Redis Stream：Redis Stream 是 Redis 5.0 版本新增加的数据结构。
+    - Redis Stream 主要用于消息队列（MQ，Message Queue），Redis 本身是有一个 Redis 发布订阅 (pub/sub) 来实现消息队列的功能，但它有个缺点就是消息无法持久化，如果出现网络断开、Redis 宕机等，消息就会被丢弃。
+    - Redis Stream 提供了消息的持久化和主备复制功能，可以让任何客户端访问任何时刻的数据，并且能记住每一个客户端的访问位置，还能保证消息不丢失。
+    - Redis Stream 的结构如下所示，它有一个消息链表，将所有加入的消息都串起来，每个消息都有一个唯一的 ID 和对应的内容：
+![Image](https://raw.githubusercontent.com/chenyunbin777/cyb_springboot_test/master/Redis/%E5%9B%BE%E7%89%87/Redis-Stream.png)
 
-
-# 如果你说还玩过Redis Module，像BloomFilter，RedisSearch，Redis-ML，面试官得眼睛就开始发亮了。
+    - 命令
+        - 1 XADD key ID field value [field value ...] 使用 XADD 向队列添加消息，如果指定的队列不存在，则创建一个队列。
+            - key ：队列名称，如果不存在就创建
+            - ID ：消息 id，我们使用 * 表示由 redis 生成，可以自定义，但是要自己保证递增性。
+            - field value ： 记录。
+        - 2 XRANGE key start end [COUNT count]  使用 XRANGE 获取消息列表 ID从小到大，会自动过滤已经删除的消息
+            - key ：队列名
+            - start ：开始值， - 表示最小值
+            - end ：结束值， + 表示最大值
+            - count ：数量
+        - 3 XREVRANGE key end start [COUNT count] 反向获取消息列表，ID 从大到小
+        ``` 
+        - 127.0.0.1:6379> xadd mystream * name cyb age 18
+        "1608709051164-0"
+        - 127.0.0.1:6379> xlen mystream
+        (integer) 1
+        - 127.0.0.1:6379> xrange mystream - + 获取消息列表，会自动过滤已经删除的消息
+        1) 1) "1608709051164-0"
+           2) 1) "name"
+              2) "cyb"
+              3) "age"
+              4) "18"
+        ``` 
+              
+        - 4 消费组消费
+            - 群组消费的主要目的也就是为了分流消息给不同的客户端处理，以更高效的速率处理消息。为达到这一肝功能需求，我们需要做三件事：创建群组，群组读取消息，向服务端确认消息以处理。
+            - XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREAMS key [key ...] ID [ID ...]：使用 XREADGROUP GROUP 读取消费组中的消息，语法格式：
+                - group ：消费组名
+                - consumer ：消费者名
+                - count ：**用来指定读取的最大数量**
+                - block milliseconds ： 阻塞队列 阻塞毫秒数，如果是0代表一直阻塞
+                - key ： 队列名
+                - ID ： 消息ID，ID也有个特殊值>，表示还未进行消费的消息
+              
+            - XGROUP CREATE mystream consumer-group-name 0-0  ：id从小到大消费
+            - XGROUP CREATE mystream consumer-group-name $：代表id从大到小消费，也就是从尾部开始消费
+            
+            - XREADGROUP GROUP consumer-group-name cyb count 1 STREAMS mystream > ：消费群组consumer-group-name中消费者cyb一次一条的消费队列mystream
+            - 消费者建立阻塞监听 来消费消息；**如果有多个消费者，那么多个消费者轮询消费，一人消费一次**。
+                - XREADGROUP GROUP consumer-group-name cyb block 0 STREAMS mystream >
+            - XACK key group ID [ID ...]0 :消息消费后，为避免再次重复消费，这是需要向服务端发送 ACK，确保消息被消费后的标记。
+                - 如 一下例子，1608709051164-0 1608711707969-0确认消费之后，在去消息组XREADGROUP中查询就不存在了，避免被重复消费
+               ``` 
+                -  127.0.0.1:6379> xack mystream consumer-group-name 1608709051164-0
+                   (integer) 1
+                -  127.0.0.1:6379> xack mystream consumer-group-name 1608711707969-0
+                   (integer) 1
+                -  127.0.0.1:6379> XREADGROUP GROUP consumer-group-name cyb STREAMS mystream 0
+                   
+                   1# "mystream" => 1) 1) "1608712864812-0"
+                         2) 1) "name"
+                            2) "cyb"
+                      2) 1) "1608712882219-0"
+                         2) 1) "name"
+                            2) "cyb"
+                      3) 1) "1608713285746-0"
+                         2) 1) "name"
+                            2) "cyb"
+              ```
+            
+        - 单独消费 
+            - XREAD [COUNT count] [BLOCK milliseconds] STREAMS key [key ...] ID [ID ...]
+                - count ：**用来指定读取的最大数量。**
+                - block milliseconds ： 阻塞队列 阻塞毫秒数，如果是0代表一直阻塞。
+                - key ： 消费队列名。
+                - ID ： ID 表示将要读取大于该 ID 的消息，当 ID 值使用 $ 赋予时，表示已存在消息的最大 Id 值。
+            - 例子：
+            ```
+               1 直接消费
+               127.0.0.1:6379> xread count 1 streams mystream 0
+               1# "mystream" => 1) 1) "1608709051164-0"
+                     2) 1) "name"
+                        2) "cyb"
+                        3) "age"
+                        4) "18" 
+          
+                2 阻塞队列消费，只会消费新消息，ID从大到小消费
+                127.0.0.1:6379> xread block 0 streams mystream $
+                1# "mystream" => 1) 1) "1608715869472-0"
+                      2) 1) "name"
+                         2) "cyb2"
+                (12.77s) 阻塞的时间
+          
+                127.0.0.1:6379> xread block 0 streams mystream $
+                1# "mystream" => 1) 1) "1608715899411-0"
+                      2) 1) "name"
+                         2) "cyb3"
+                (4.10s) 
+            ``` 
+                            
+# 如果你说还玩过Redis Module，像BloomFilter，RedisSearch，Redis-ML
 
 ## Redis Module
 - redis在4.0版本中，推出了一个非常吸引的特性，可以通过编写插件的模式，来动态扩展redis的能力。

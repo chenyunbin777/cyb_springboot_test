@@ -1,4 +1,4 @@
-# 一 多线程的支持
+# 一 IO多线程的支持
 ## 配置
  - io-threads-do-reads no   //默认是不开启Redis多线程的，如果需要开启设置为yes
  - 注释:Usually threading reads doesn't help much.
@@ -207,4 +207,85 @@ OK
 6) "3"
 
 
-# 三 
+# 三 Redis6新特性之ACL安全策略（用户权限管理）
+Access Control List（访问控制列表）
+
+官网：https://redis.io/topics/acl
+
+参考：https://blog.csdn.net/wsdc0521/article/details/106765856
+
+## 命令
+- acl list 查看用户授权list ：
+    - +代表拥有权限，
+    - -代表没有权限
+    - @all:代表所有权限，类似的 @list 代表所有list操作权限,+@sortedset
+    - 127.0.0.1:6379> acl list
+      1) "user alice on #eb12d82afe12728c70b2d2d6549bd13309d40c28ea822e1b25117993b691de79 #377326fe8cb65e2fbffac7cd6c8ef3dfb18a6a9de4eae19524fd613d8c512183 ~cyb* -@all +get +set"
+      2) "user default on #8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92 ~* +@all"
+      用户 alice 有两个密码（都是加密过的）没有所有的权限，只有get set cyb开头的key的权限
+      用户 default（默认用户）拥有所有的权限
+- ACL USERS
+    - 查看所有的ACL用户
+    - 127.0.0.1:6379> acl users
+      1) "alice"
+      2) "default"
+- ACL SETUSER
+   
+    - acl setuser alice on >cyb ~cyb* +get +set #授权用户alice，on为活跃状态，密码为cyb，允许对所有cyb开头的key使用get和set命令
+    - acl setuser alice on >cybcyb 授权给用户alice 一个额外的密码cybcyb
+    - auth alice cybcyb 命令来切换用户
+    - 127.0.0.1:6379> get a   如下：没有权限获取a，就会报错。只有get set cyb开头的key的权限
+      (error) NOPERM this user has no permissions to access one of the keys used as arguments
+    - 
+- ACL GETUSER
+    - acl getuser <username> #查看用户的ACL权限
+    - 127.0.0.1:6379> acl getuser alice
+      1) "flags"  #活跃状态，on：活跃 off：不活跃
+      2) 1) "on"
+      3) "passwords" #可用密码列表
+      4) 1) "eb12d82afe12728c70b2d2d6549bd13309d40c28ea822e1b25117993b691de79"
+         2) "377326fe8cb65e2fbffac7cd6c8ef3dfb18a6a9de4eae19524fd613d8c512183"
+      5) "commands"  #拥有的命令权限
+      6) "-@all +@sortedset +@list +@hash +get +set"
+      7) "keys"
+      8) 1) "cyb*"
+- ACL DELUSER
+    - acl deluser <username>   #删除指定的用户
+    
+- 持久化ACL的方式
+    - redis.conf配置
+        - **如果使用redis.conf配置ACL，则使用config rewrite命令将ACL持久化到redis.conf中**
+        - 127.0.0.1:6379> config rewrite  #将默认用户 default  和 slice 都持久化到了redis.conf 文件中。
+        OK
+    - aclfile文件的方式
+        - 将redis.conf中的 aclfile /etc/redis/users.acl 这里设置acl保存文件的路径
+        - 使用命令：ACL SAVE   来保存
+        - ACL LOAD：我们也可以直接在aclfile中修改或新增ACL权限，修改之后不会立刻生效，我们可以在redis命令行中执行acl load将该aclfile中的权限加载至redis服务中
+        
+> 注意：以上两种方式，只能使用一种
+
+- AUTH
+使用auth命令切换用户：
+AUTH <username> <password>
+
+
+
+# 四 Redis集群代理模块 Redis Cluster proxy
+- https://github.com/RedisLabs/redis-cluster-proxy 代码
+- 客户端不需要知道集群中的具体节点个数和主从身份，可以直接通过代理访问集群，对于客户端来说通过集群代理访问的集群就和单机的Redis一样，
+因此也能解决很多集群的使用限制。
+
+- Redis集群代理的特点：
+    - 自动化路由：每个查询被自动路由到集群的正确节点；
+    - 多线程：多路复用通信模型，每个线程都有自己的集群连接；
+    - 顺序性：在多路复用上下文中，保证查询的执行和应答顺序；
+    - 无感知更新集群信息：当请求/重定向错误时会自动更新集群信息，客户端提交的查询会在集群信息更新完成后重新执行，对于客户端来说这一切是无感的，客户端不会收到请求/重定向的错误信息，而是直接收到查询的结果；
+    - 跨槽/节点查询：支持跨slot或node的mutiple操作key，如mget,mset,del等。但由于mset,del会破坏原子性，因此该配置默认关闭；
+    - ACL：支持连接开启了ACL的Redis集群；
+    - DBSIZE：对于没有指定节点的命令，将会合并所有的信息的总和并返回；
+
+# 五 提升了RDB日志加载速度
+根据文件的实际组成（较大或较小的值），可以预期20/30%的改进。当有很多客户机连接时，信息也更快了，这是一个老问题，现在终于解决了。
+
+# 六 支持SSL
+连接支持SSL，更加安全。

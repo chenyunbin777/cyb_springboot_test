@@ -41,10 +41,7 @@ redis的配置文件redis.conf存放在/usr/local/etc路径下
 brew services start redis
 //方式二
 redis-server /usr/local/etc/redis.conf
-1
-2
-3
-4
+
 //执行以下命令
 redis-server
 
@@ -54,12 +51,13 @@ redis-server
 我们可以通过下面命令查看redis是否正在运行
 
 ps axu | grep redis
+ps -ef | grep redis
 
 6、redis-cli连接redis服务
 
-redis默认端口号6379，默认auth为空，输入以下命令即可连接
+redis默认端口号6379，默认auth为空，输入以下命令即可连接  密码：123456
 
-redis-cli -h 127.0.0.1 -p 6379
+redis-cli -h 127.0.0.1 -p 6379 -a 123456
 
 7、启动 redis 客户端，打开终端并输入命令 redis-cli。该命令会连接本地的 redis 服务。
 
@@ -74,6 +72,7 @@ PONG
 
 正确停止Redis的方式应该是向Redis发送SHUTDOWN命令
 redis-cli shutdown
+redis-cli -a 123456 shutdown  
 
 强行终止redis
 sudo pkill redis-server
