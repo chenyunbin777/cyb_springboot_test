@@ -1,4 +1,4 @@
-package com.cyb.codetest.Thread;
+package com.cyb.codetest.多线程;
 
 import java.util.LinkedList;
 
@@ -14,11 +14,11 @@ public class ProducerAndComsumer {
     private static LinkedList list = new LinkedList();
 
     //生产产品
-    public static void produce(int num){
+    public static void produce(int num) {
         //同步
-        synchronized (list){
+        synchronized (list) {
             //仓库剩余的容量不足以存放即将要生产的数量，暂停生产
-            while(list.size()+num > MAX_SIZE){
+            while (list.size() + num > MAX_SIZE) {
                 System.out.println("【要生产的产品数量】:" + num + "\t【库存量】:"
                         + list.size() + "\t暂时不能执行生产任务!");
 
@@ -30,7 +30,7 @@ public class ProducerAndComsumer {
                 }
             }
 
-            for(int i=0;i<num;i++){
+            for (int i = 0; i < num; i++) {
                 list.add(new Object());
             }
 
@@ -41,11 +41,11 @@ public class ProducerAndComsumer {
     }
 
     //消费产品
-    public static void consume(int num){
-        synchronized (list){
+    public static void consume(int num) {
+        synchronized (list) {
 
             //不满足消费条件
-            while(num > list.size()){
+            while (num > list.size()) {
                 System.out.println("【要消费的产品数量】:" + num + "\t【库存量】:"
                         + list.size() + "\t暂时不能执行生产任务!");
 
@@ -57,7 +57,7 @@ public class ProducerAndComsumer {
             }
 
             //消费条件满足，开始消费
-            for(int i=0;i<num;i++){
+            for (int i = 0; i < num; i++) {
                 list.remove();
             }
 
@@ -69,19 +69,20 @@ public class ProducerAndComsumer {
 
 
     public static void main(String[] args) {
-        Thread thread = new Thread(()->{
+        Thread thread = new Thread(() -> {
             for (int i = 0; i < 100; i++) {
                 produce(10);
             }
 
         });
         thread.start();
-        Thread thread2 = new Thread(()->{
+        Thread thread2 = new Thread(() -> {
             for (int i = 0; i < 100; i++) {
                 consume(10);
             }
 
         });
-        thread2.start();;
+        thread2.start();
+        ;
     }
 }

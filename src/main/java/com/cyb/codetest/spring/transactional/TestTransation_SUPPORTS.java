@@ -5,13 +5,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 事务传播行为-有事务执行 没有事务就按无事务执行
+ *
  * @author cyb
  * @date 2020/12/04 4:05 下午
  */
 public class TestTransation_SUPPORTS {
 
     /**
-
+     *
      */
     @Transactional(propagation = Propagation.REQUIRED)
     public void methodA() {
@@ -19,6 +20,7 @@ public class TestTransation_SUPPORTS {
         methodB();
         doSomeThingB();
     }
+
     @Transactional(propagation = Propagation.SUPPORTS)
     public void methodB() {
 

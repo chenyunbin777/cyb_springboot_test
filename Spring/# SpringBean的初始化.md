@@ -18,20 +18,41 @@
 
 
 
-https://blog.csdn.net/u012098021/article/details/107352463/
-1 Spring 循环依赖如何解决？
+原文链接：https://blog.csdn.net/zhangmingan123/article/details/111178263
+1 Spring 循环依赖如何解决？ 提前暴露 循环依赖对象的半成品
+三级缓存：
 2 Spring通过三级缓存来解决。 为什么要使用三级缓存？二级缓存行不行？
+不行：
+成品放在singletonObjects中，半成品放在earlySingletonObjects中
+流程可以这样走：实例化A ->将半成品的A放入earlySingletonObjects中 ->填充A的属性时发现取不到B->实例化B->将半成品的A放入earlySingletonObjects中->从earlySingletonObjects中取出A填充B的属性->将成品B放入singletonObjects,并从earlySingletonObjects中删除B->将B填充到A的属性中->将成品A放入singletonObjects并删除earlySingletonObjects。
+这样的流程是线程安全的，**不过如果A上加个切面（AOP）**，这种做法就没法满足需求了，
+因为earlySingletonObjects中存放的都是原始对象，而我们需要注入的其实是A的代理对象。
+
+
+
+
+
+第一级缓存：Map<String, Object> singletonObjects：存储完整版的实例
+第二级缓存：Map<String, Object> earlySingletonObjects：存储半成品，没有赋初值的对象实例
+第三级缓存：Map<String, ObjectFactory<?>> singletonFactories：生成一个对象的代理，如果对象上有aop的实现就可以直接通过
+getObject()获取代理类。
+
+
+
+
+
+
+
 - 答：二级缓存的作用：保存了暴露的早期对象，这个早期对象就是 还没有给属性赋初值的对象。 就为了在多线程的情况下， Thread1 执行完A的 Object bean = Clazz.getInstance()，创建了实例。 此时B过来 getBean(A)，返回的时候不完整的A。
      二级缓存就保存的是上边的bean（不完整，属性没有赋初值）。 一级缓存保存的是一个完整的bean（Object bean = Clazz.getInstance()  bean.getFields()中的所有属性也进行了赋值）
      - 三级缓存中提到出现循环依赖才去解决，也就是说出现循环依赖时，才会执行工厂的getObject生成(获取)早期依赖，
      这个时候就需要给它挪个窝了，因为真正暴露的不是工厂，而是对象，所以需要使用一个新的缓存保存暴露的早期对象(earlySingletonObjects)，
      同时移除提前暴露的工厂，也不需要在多重循环依赖时每次去执行getObject(虽然个人觉得不会出问题，因为代理对象不会重复生成，详细可以了解下代理里面的逻辑，如wrapIfNecessary)。  
 - 为什么要使用三级缓存？
-    - 答：
-    - 为了出现循环依赖才去解决，不出现就不解决，
-    - 虽然支持循环依赖，但是只有在出现循环依赖时才真正暴露早期对象，否则只暴露个获取bean的方法，并没有真正暴露bean，
-    - 因为这个方法不会被执行到，这块的实现就是三级缓存（singletonFactories），只缓存了一个单例bean工厂。
-    - 这个bean工厂不仅可以暴露早期bean还可以暴露代理bean，如果存在aop代理，则**依赖的应该是代理对象**，而不是原始的bean。
+    ObjectFactory？
+    - 如果仅仅是解决循环依赖问题，使用二级缓存就可以了，但是如果对象实现了AOP，那么注入到其他bean的时候，
+    并不是最终的代理对象，而是原始的。这时就需要通过三级缓存的ObjectFactory才能提前产生最终的需要代理的对象。
+    - **这个bean工厂不仅可以暴露早期bean还可以暴露代理bean，如果存在aop代理**，则**依赖的应该是代理对象**，而不是原始的bean。
      
     
 3 构造函数的循环依赖？
@@ -111,7 +132,7 @@ b、FileSystemXmlApplication：从文件系统中的XML文件载入上下文定�
 c、XmlWebApplicationContext：从Web系统中的XML文件载入上下文定义信息
 
 紧接着，Spring会检测该对象是否实现了xxxAware接口，并将相关的xxxAware实例注入给bean。
-4. BeanPostProcessor
+**4. BeanPostProcessor**
 当经过上述几个步骤后，bean对象已经被正确构造，但如果你想要对象被使用前再进行一些自定义的处理，就可以通过BeanPostProcessor接口实现。
 该接口提供了两个函数：
 postProcessBeforeInitialzation( Object bean, String beanName )
@@ -121,7 +142,7 @@ postProcessBeforeInitialzation( Object bean, String beanName )
 postProcessAfterInitialzation( Object bean, String beanName )
 当前正在初始化的bean对象会被传递进来，我们就可以对这个bean作任何处理。
 这个函数会在InitialzationBean完成后执行，因此称为后置处理。
-5. InitializingBean与init-method
+**5. InitializingBean与init-method**
 当BeanPostProcessor的前置处理完成后就会进入本阶段。
 InitializingBean接口只有一个函数：
 afterPropertiesSet()
@@ -130,6 +151,38 @@ afterPropertiesSet()
 当然，Spring为了降低对客户代码的侵入性，给bean的配置提供了init-method属性，该属性指定了在这一阶段需要执行的函数名。Spring便会在初始化阶段执行我们设置的函数。init-method本质上仍然使用了InitializingBean接口。
 6. DisposableBean和destroy-method
 和init-method一样，通过给destroy-method指定函数，就可以在bean销毁前执行指定的逻辑。
+
+
+现在开始初始化容器
+2014-5-18 15:46:20 org.springframework.context.support.AbstractApplicationContext prepareRefresh
+信息: Refreshing org.springframework.context.support.ClassPathXmlApplicationContext@19a0c7c: startup date [Sun May 18 15:46:20 CST 2014]; root of context hierarchy
+2014-5-18 15:46:20 org.springframework.beans.factory.xml.XmlBeanDefinitionReader loadBeanDefinitions
+信息: Loading XML bean definitions from class path resource [springBeanTest/beans.xml]
+这是BeanFactoryPostProcessor实现类构造器！！
+BeanFactoryPostProcessor调用postProcessBeanFactory方法
+这是BeanPostProcessor实现类构造器！！
+这是InstantiationAwareBeanPostProcessorAdapter实现类构造器！！
+2014-5-18 15:46:20 org.springframework.beans.factory.support.DefaultListableBeanFactory preInstantiateSingletons
+信息: Pre-instantiating singletons in org.springframework.beans.factory.support.DefaultListableBeanFactory@9934d4: defining beans [beanPostProcessor,instantiationAwareBeanPostProcessor,beanFactoryPostProcessor,person]; root of factory hierarchy
+InstantiationAwareBeanPostProcessor调用postProcessBeforeInstantiation方法
+【构造器】调用Person的构造器实例化
+InstantiationAwareBeanPostProcessor调用postProcessPropertyValues方法
+【注入属性】注入属性address
+【注入属性】注入属性name
+【注入属性】注入属性phone
+【BeanNameAware接口】调用BeanNameAware.setBeanName()
+【BeanFactoryAware接口】调用BeanFactoryAware.setBeanFactory()
+BeanPostProcessor接口方法postProcessBeforeInitialization对属性进行更改！
+【InitializingBean接口】调用InitializingBean.afterPropertiesSet()
+【init-method】调用<bean>的init-method属性指定的初始化方法
+BeanPostProcessor接口方法postProcessAfterInitialization对属性进行更改！
+InstantiationAwareBeanPostProcessor调用postProcessAfterInitialization方法
+容器初始化成功
+Person [address=广州, name=张三, phone=110]
+现在开始关闭容器！
+【DiposibleBean接口】调用DiposibleBean.destory()
+【destroy-method】调用<bean>的destroy-method属性指定的初始化方法
+
 
 
 
@@ -146,4 +199,34 @@ afterPropertiesSet()
 5、DispatcherServlet将ModelAndView交给ViewReslover视图解析器解析，然后返回真正的视图。
 6、DispatcherServlet将模型数据填充到视图中
 7、DispatcherServlet将结果响应给用户
+
+# Spring 三种注入方式
+- 1 构造方法注入：
+<!-- 注册userService -->
+<bean id="userService" class="com.lyu.spring.service.impl.UserService">
+    <!-- 指定构造方法要注入的对象-->
+    <constructor-arg ref="userDaoJdbc"></constructor-arg>
+</bean>
+<!-- 注册jdbc实现的dao -->
+<bean id="userDaoJdbc" class="com.lyu.spring.dao.impl.UserDaoJdbc"></bean>
+
+- 2 setter注入：
+
+<!-- 注册userService -->
+<bean id="userService" class="com.lyu.spring.service.impl.UserService">
+    <!-- 写法一 -->
+    <!-- <property name="UserDao" ref="userDaoMyBatis"></property> -->
+    <!-- 写法二 -->
+    <property name="userDao" ref="userDaoMyBatis"></property>
+</bean>
+    - 这两种写法都可以,spring会将name值的每个单词首字母转换成大写，
+      然后再在前面拼接上”set”构成一个方法名,然后去对应的类中查找该方法,通过反射调用,实现注入。
+
+<!-- 注册mybatis实现的dao -->
+<bean id="userDaoMyBatis" class="com.lyu.spring.dao.impl.UserDaoMyBatis"></bean>
+
+- 3 基于注解的注入
+    - @Autowired：spring注解，默认是以byType的方式去匹配与属性名相同的bean的id，如果没有找到，就通过byName的方式去查找，
+    - @Resource：java的注解，默认以byName的方式去匹配与属性名相同的bean的id，如果没有找到就会以byType的方式查找，如果byType查找到多个的话，使用@Qualifier注解（spring注解）指定某个具体名称的bean。
+如果同一个接口的不同实现类可以通过这个注解来区别。
 

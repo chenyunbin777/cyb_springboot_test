@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 /**
  * 简易的布隆过滤器
+ *
  * @author cyb
  * @date 2020/12/17 4:04 下午
  */
@@ -18,7 +19,7 @@ public class SimpleBloomFilter {
 
     //后面hash函数会用到，用来生成不同的hash值，可随意设置,
     //我觉得就是让value的hash值更分散的分布在bits上，这样使结果更准确
-    private static final int[] seeds = new int[] {7, 11, 13, 31, 37, 61,};
+    private static final int[] seeds = new int[]{7, 11, 13, 31, 37, 61,};
 
     //bit数组，用来存放结果
     private BitSet bitSet = new BitSet(DEFAULT_SIZE);
@@ -45,12 +46,13 @@ public class SimpleBloomFilter {
 
     /**
      * 计算出元素的hash值，并且设置结果为true
+     *
      * @param value
      */
     public void add(String value) {
         for (int seed : seeds) {
             int hashValue = hash(value, seed);
-            System.out.println("hashValue:"+hashValue);
+            System.out.println("hashValue:" + hashValue);
             bitSet.set(hashValue, true);
         }
     }
@@ -58,6 +60,7 @@ public class SimpleBloomFilter {
     /**
      * 判断value是否存在于布隆过滤器中，
      * 存在的判断依据是：通过这几个hash函数计算的hash值所在的位置，在bitSet上都是true。也就是说这些hash值都被计算过
+     *
      * @param value
      * @return
      */

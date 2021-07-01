@@ -37,7 +37,7 @@
     
     - 例如，如果你有一个四核的机器，试着使用2或3个I/O，线程，如果你有一个8核机器，尝试使用6线程。
  
-
+    - Redis 的多线程部分只是用来处理网络数据的读写和协议解析，执行命令仍然是单线程。
 # 二 客户端缓存
 https://www.jianshu.com/p/539edd85b186
 讲解与练习：https://chenssy.blog.csdn.net/article/details/107241158?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-3.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-3.control

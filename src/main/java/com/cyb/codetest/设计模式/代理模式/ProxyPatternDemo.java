@@ -2,6 +2,7 @@ package com.cyb.codetest.设计模式.代理模式;
 
 /**
  * ProxyPatternDemo 类使用 ProxyImage 来获取要加载的 Image 对象，并按照需求进行显示。
+ *
  * @author cyb
  * @date 2021/1/2 12:25 上午
  */

@@ -1,3 +1,43 @@
+# 脑裂问题
+- 1 follower与leadre之间的通信是通过心跳检测实现的，follower会注册Watcher在leader中创建的临时文件。一旦zookeeper发现
+leader有问题了，会改变临时节点，然后zk就会发通知给各个follower，follower再调用对应的回调handler。
+
+- 2 **注意watch是一次性的，每次都需要重新注册**，并且客户端在会话异常结束时不会收到任何通知，而快速重连接时仍不影响接收通知。
+
+- 3 如果leader1由于网络问题，follower监听不到leader的存在时，就是发生选举出一个新的leader2。那么这时候就有两个leader了。
+之后leader1又恢复了通信的话，我们应该听谁的呢？
+    - 答：听最新的leader 的，因为他是有最新的事务id：ZXID。就算是leader1不能用，也不影响leader2的使用。
+
+- 4 zookeeper解决脑裂的方案：存在超过半数的机器才可以选举称为leader
+    - 假设某个leader假死，其余的followers选举出了一个新的leader。
+    这时，旧的leader复活并且仍然认为自己是leader，这个时候它向其他followers发出写请求也是会被拒绝的。
+    因为每当新leader产生时，**会生成一个epoch标号(标识当前属于那个leader的统治时期)**，这个epoch是递增的，
+    followers如果确认了新的leader存在，知道其epoch，就会拒绝epoch小于现任leader epoch的所有请求。
+    那有没有follower不知道新的leader存在呢，有可能，但肯定不是大多数，否则新leader无法产生。
+    Zookeeper的写也遵循quorum机制，因此，得不到大多数支持的写是无效的，旧leader即使各种认为自己是leader，依然没有什么作用。
+
+
+
+#Zookeeper 集群节点为什么要部署成奇数
+至于为什么最好为奇数个节点？这样是为了以最大容错服务器个数的条件下，能节省资源。比如，最大容错为2的情况下，对应的zookeeper服务数，奇数为5，而偶数为6，也就是6个zookeeper服务的情况下最多能宕掉2个服务，所以从节约资源的角度看，没必要部署6（偶数）个zookeeper服务节点。
+
+
+
+# 
+选主算法中的zxid是从内存数据库中取的最新事务id，事务操作是分两阶段的（提出阶段和提交阶段），
+
+1) 提交阶段：leader生成提议并广播给followers , follower收到提议后先将事务写到本地事务日志，然后反馈ACK
+
+2）提交阶段：leader收到半数以上的ACK后，再广播commit消息，同时将事务操作应用到内存中。
+
+ 
+
+可见，选主只是选出了内存数据是最新的节点，仅仅靠这个是无法保证已经在leader服务器上提交的事务最终被所有服务器都提交。
+比如leader发起提议P1,并收到半数以上follower关于P1的ACK后，在广播commit消息之前宕机了，
+选举产生的新leader之前是follower，未收到关于P1的commit消息，内存中是没有P1的数据。
+而**ZAB协议的设计是需要保证选主后，P1是需要应用到集群中的**。这块的逻辑是通过选主后的数据同步来弥补。 
+
+
 # ZAB协议（Atomic Broadcast 原子广播协议）
 - 作为其数据一致性核心的算法。，是
     - 1 崩溃可恢复的：当服务框架启动或者Leader崩溃，网络中断或者重启，我们会选举新的Leader，
@@ -5,7 +45,7 @@
     
     - 2 原子消息广播算法
         - 核心原理（数据同步机制）：leader将我们应用服务器的请求转换成一个事务Proposal，并且广播到集群中所有的Follower当中
-    只要有超过半数的Follower进行了正确的反馈之后，Leader会再次向所有的Follower分发Commit消息，要求
+    只要有超过半数（n/2+1）的Follower进行了正确的反馈之后，Leader会再次向所有的Follower分发Commit消息，要求
     其将前一个事务提交。
         - 基于TCP协议，可以保证消息发送与接收的顺序性。
         - 事务ID：ZXID，单调递增的唯一ID，在Leader广播事务之前会进行创建。
@@ -46,7 +86,8 @@ dubbo.registry.address=zookeeper://zk6.prod.souche:2181?backup=zk7.prod.souche:2
     - 配置可以是
         -机器列表，运行时开关配置，数据库配置信息等
 ## 负载均衡
-- 当服务器宕机，zookeeper因为没有检测到心跳，自动把该节点移除，并通知其他服务器，其他服务器得知该机器已宕机，在分配连接时，不会分配到这台机器上，这点也是标题说的在负载均衡中用到zookeeper的原因
+- 当服务器宕机，zookeeper因为没有检测到心跳，自动把该节点移除，并通知其他服务器，其他服务器得知该机器已宕机，
+在分配连接时，不会分配到这台机器上，这点也是标题说的在负载均衡中用到zookeeper的原因
 
 ## 命名服务
 - 使用分布式全局唯一ID的分配机制，如 type-job-0000000003，可以来唯一标识一个API接口

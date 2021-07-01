@@ -1,4 +1,4 @@
-package com.cyb.codetest.Thread;
+package com.cyb.codetest.多线程;
 
 /**
  * @author cyb
@@ -8,7 +8,7 @@ public class SynchronizedTest {
 
     public static void main(String[] args) {
         //锁是类对象
-        synchronized (SynchronizedTest.class){
+        synchronized (SynchronizedTest.class) {
 
         }
         SynchronizedTest synchronizedTest = new SynchronizedTest();
@@ -17,10 +17,10 @@ public class SynchronizedTest {
 
     }
 
-    public void fBlock(){
+    public void fBlock() {
         //this就是调用这个方法的对象
         System.out.println(this);
-        synchronized (this){
+        synchronized (this) {
 
         }
     }
@@ -28,16 +28,16 @@ public class SynchronizedTest {
     /**
      * 锁住类对象，
      */
-    public static synchronized void StaticBlock(){
+    public static synchronized void StaticBlock() {
         //this就是调用这个方法的对象
         System.out.println("StaticBlock");
     }
 
 
-    public synchronized void f2(){
+    public synchronized void f2() {
         //this就是调用这个方法的对象
         System.out.println(this);
-        synchronized (this){
+        synchronized (this) {
 
         }
     }

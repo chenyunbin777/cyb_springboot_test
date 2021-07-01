@@ -48,19 +48,21 @@ https://blog.csdn.net/pangchengyong0724/article/details/76168576
 - 隔离级别为：可重复读
     - 行锁防止别的事务修改或删除，GAP锁防止别的事务新增，
     行锁和GAP锁结合形成的的Next-Key锁共同解决了RR级别在写数据时的不可重复读的问题。
-- 1 next-key lock（临键锁）
+- 1 next-key lock（临键锁）：会锁定本身，和范围
      - select * from table where id > 2 and id < 5
      - 左开右闭  (]  id>i and i<=5 的范围的所有行都会被锁定
      
 
-- 2 间隙锁：
+- 2 间隙锁：只会锁定一个范围，但不包括记录本身
     - begin select * from table where id > 10 and id < 20 for update  commit 不会查到任何记录
         - 那么这时就会在id：10~20之间加一个锁 ，如果你要插入这个范围的数据，就不成功，必须等前一个事务提交之后才可以。
     - begin select * from table where id = 15  commit
         -  id:10~21 都会被加锁
         
     - 若查询列上没有索引且不是主键，那么间隙锁会为整张表上锁
-    
+    - 如果查询的索引含有唯一属性时（主键索引，唯一索引）innodb会对Next-key Locking进行优化，降级为行级锁
+        - 如果唯一索引是由多个列组成，而查询仅是多个列中的一个，也是使用Next-key Locking。 
+    - 如果是：辅助索引的话，会锁定一个范围，如：b： 1 3 6 8   where b = 3,那么就是锁定 （1，3】，(3,6)
     
     
 - 4 共享锁：可读，不可写

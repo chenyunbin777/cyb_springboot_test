@@ -14,19 +14,19 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public class SkipListTest {
 
     public static void main(String[] args) {
-        ConcurrentSkipListMap<String,Integer> skipListMap = new ConcurrentSkipListMap<>(new Comparator<String>() {
+        ConcurrentSkipListMap<String, Integer> skipListMap = new ConcurrentSkipListMap<>(new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
                 return 0;
             }
         });
-        skipListMap.put("a",1);
-        skipListMap.put("c",3);
-        skipListMap.put("b",2);
-        skipListMap.put("d",4);
-        System.out.println("skipListMap:"+ JSON.toJSONString(skipListMap));
+        skipListMap.put("a", 1);
+        skipListMap.put("c", 3);
+        skipListMap.put("b", 2);
+        skipListMap.put("d", 4);
+        System.out.println("skipListMap:" + JSON.toJSONString(skipListMap));
 
-        Set<Integer> mset= new ConcurrentSkipListSet<>();
+        Set<Integer> mset = new ConcurrentSkipListSet<>();
 
         mset.add(1);
         mset.add(21);
@@ -34,7 +34,7 @@ public class SkipListTest {
         mset.add(2);
         //输出是有序的，从小到大。
         //skipListSet result=[1, 2, 6, 21]
-        System.out.println("ConcurrentSkipListSet result="+mset);
+        System.out.println("ConcurrentSkipListSet result=" + mset);
         ConcurrentSkipListSet<String> myset = new ConcurrentSkipListSet<>();
         System.out.println(myset.add("abc"));
         System.out.println(myset.add("fgi"));
@@ -43,7 +43,7 @@ public class SkipListTest {
         /*
          * 输出是有序的:ConcurrentSkipListSet contains=[Abc, abc, def, fgi]
          */
-        System.out.println("ConcurrentSkipListSet contains="+myset);
+        System.out.println("ConcurrentSkipListSet contains=" + myset);
 
 
     }

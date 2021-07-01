@@ -6,13 +6,14 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 事务传播行为-支持事务 如果没后事务则抛异常
  * 则会抛出异常throw new IllegalTransactionStateException(“Transaction propagation ‘mandatory’ but no existing transaction found”);
+ *
  * @author cyb
  * @date 2020/12/04 4:05 下午
  */
 public class TestTransation_MANDATORY {
 
     /**
-
+     *
      */
     @Transactional(propagation = Propagation.REQUIRED)
     public void methodA() {
@@ -20,6 +21,7 @@ public class TestTransation_MANDATORY {
         methodB();
         doSomeThingB();
     }
+
     @Transactional(propagation = Propagation.MANDATORY)
     public void methodB() {
 

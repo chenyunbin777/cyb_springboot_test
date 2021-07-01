@@ -54,6 +54,8 @@ redis-server --version
     ``` 
 
 - 列表List（阻塞队列，优先级队列）
+    - **底层实现**
+        - 通过多个 listNode 结构就可以组成链表，这是一个双向链表。
     - 1 LPUSH key value1 [value2] ：将一个或多个值插入到列表头部
     - 2 BRPOP key1 [key2 ] timeout：移出并获取列表的最后一个元素， 如果列表没有元素会阻塞列表直到等待超时或发现可弹出元素为止。
     - **1 2 组合可以构成优先级队列，FIFO。**
@@ -69,6 +71,8 @@ redis-server --version
    
 
 - 有序集合SortedSet(重点，排行榜)
+    - **底层实现**
+        - 跳表实现skiplist
     - Redis 有序集合和集合一样也是 string 类型元素的集合,且不允许重复的成员。
     - 不同的是每个元素都会关联一个 double 类型的分数。**redis 正是通过分数来为集合中的成员进行从小到大的排序。**
     - 有序集合的成员是唯一的,但分数(score)却可以重复。
@@ -104,6 +108,15 @@ redis-server --version
           ZREVRANK cybSortedSet cyb2
           (integer) 0
     ``` 
+
+## 渐近式 rehash
+- 什么叫渐进式 rehash？也就是说扩容和收缩操作不是一次性、集中式完成的，而是分多次、渐进式完成的。
+如果保存在Redis中的键值对只有几个几十个，那么 rehash 操作可以瞬间完成，但是如果键值对有几百万，几千万甚至几亿，
+那么要一次性的进行 rehash，势必会造成Redis一段时间内不能进行别的操作。所以Redis采用渐进式 rehash,
+这样在进行渐进式rehash期间，字典的删除查找更新等操作可能会在两个哈希表上进行，第一个哈希表没有找到，
+就会去第二个哈希表上进行查找。但是进行 增加操作，一定是在新的哈希表上进行的。
+
+- 定时任务中也会执行渐进式rehash操作
 
 ## 如果你是Redis中高级用户，
 还需要加上下面几种数据结构
@@ -146,9 +159,13 @@ redis-server --version
              2) "30.29999970751173777"
         - GEODIST position beijing hangzhou km   北京杭州之间的距离(单位：km，这个是可选的)
             "1092.3022"
-        - GEORADIUS position 120 35 1000 km  在某经纬度，半径在1000km范围内有哪些地点
-            1) "beijing"
-            2) "hangzhou"
+        - GEORADIUS position 120 35 1000 km withcoord  **在某经纬度，半径在1000km范围内有哪些地点**
+           1) 1) "beijing"
+              2) 1) "116.19999736547470093"
+                 2) "39.56000019952067248"
+           2) 1) "hangzhou"
+              2) 1) "120.20000249147415161"
+                 2) "30.29999970751173777"
         - GEOHASH position beijing hangzhou  求某些地理位置的hash值
         - GEORADIUSBYMEMBER position beijing 1000 km / 2000 km  以北京为中心点 半径1000km/2000km范围内都有哪些城市
             "beijing"                                 1) "hangzhou"
