@@ -20,8 +20,8 @@ public class TestMain {
 //        AbstractDecorator abstractDecorator1 = new AbstractDecoratorFilter1(invoker,new Filter1());
 //        abstractDecorator1.filter();
 
-        AbstractInvokerDecorator abstractInvokerDecorator2 = new DecoratorFilter2(new DecoratorFilter1(new Invoker()));
-        abstractInvokerDecorator2.invoke();
+//        AbstractInvokerDecorator abstractInvokerDecorator2 = new DecoratorFilter2(new DecoratorFilter1(new Invoker()));
+//        abstractInvokerDecorator2.invoke();
 
         System.out.println("---------------");
 //        AbstractInvokerDecorator abstractInvokerDecorator3 = new DecoratorFilter3(new DecoratorFilter2(new DecoratorFilter1(new Invoker())));
