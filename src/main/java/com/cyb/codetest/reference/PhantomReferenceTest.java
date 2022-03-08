@@ -1,5 +1,7 @@
 package com.cyb.codetest.reference;
 
+import com.alibaba.fastjson.JSON;
+
 import java.lang.ref.PhantomReference;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -18,9 +20,10 @@ import java.util.Objects;
 public class PhantomReferenceTest {
 
 
-    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
+    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException, InterruptedException {
         ReferenceQueue queue = new ReferenceQueue();
         Object object = new Object();
+        Date date = new Date();
         /**
          * 虚引用使用上需要注意几点：
          *
@@ -28,15 +31,28 @@ public class PhantomReferenceTest {
          * 2 PhantomReference的get方法始终返回null
          * 3 当垃圾回收器决定对PhantomReference对象进行回收时，会将其插入ReferenceQueue中。
          */
-        PhantomReference phantomReference = new PhantomReference(object,queue);
+        PhantomReference phantomReference = new PhantomReference(date,queue);
 
 
         System.out.println(phantomReference.get());
+        //对象设置为null主动调用gc
+        date = null;
+        System.gc();
 
         //如果引用队列中存在了object对象，那么证明我们监控的object对象已经被jvm 回收了
-        Reference obj = queue.poll();
+        Reference obj = queue.remove();
         if(Objects.nonNull(obj)){
-            System.out.println("虚幻引用对象呗jvm回收了");
+            Field rereferent = Reference.class
+                    .getDeclaredField("referent");
+            rereferent.setAccessible(true);
+            Object result = rereferent.get(obj);
+            System.out.println("gc will collect："
+                    + result.getClass() + "@"
+                    + result.hashCode() + "\t"
+                    +  JSON.toJSONString(result));
+            System.out.println(JSON.toJSONString(obj));
+
+            System.out.println("虚幻引用对象被jvm回收了");
         }
 
 
