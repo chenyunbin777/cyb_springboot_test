@@ -39,13 +39,28 @@ public class PhantomReferenceTest {
         date = null;
         System.gc();
 
-        //如果引用队列中存在了object对象，那么证明我们监控的object对象已经被jvm 回收了
+        //如果引用队列中存在了object对象，那么证明我们监控的object对象已经被jvm 回收了.
+        // remove方法会一直阻塞在这里知道队列里有数据存在
         Reference obj = queue.remove();
+
+        //这里的obj就是一个虚幻引用，那么如果获取到虚幻引用引用到的对象呢
+        //java.lang.ref.PhantomReference@7aec35a
+        System.out.println("obj==="+obj);
+        System.out.println("obj==="+JSON.toJSONString(obj));
+
         if(Objects.nonNull(obj)){
-            Field rereferent = Reference.class
+            //获取类Reference的属性
+
+//            Field referent = obj.getClass().getDeclaredField("referent");
+
+            Field referent = Reference.class
                     .getDeclaredField("referent");
-            rereferent.setAccessible(true);
-            Object result = rereferent.get(obj);
+            //设置获取权限，如果属性是private也是可以获取到的
+            referent.setAccessible(true);
+
+            //获取类obj的referent属性？？？
+            //referent属性就是虚幻应用实际引用的对象
+            Object result = referent.get(obj);
             System.out.println("gc will collect："
                     + result.getClass() + "@"
                     + result.hashCode() + "\t"
