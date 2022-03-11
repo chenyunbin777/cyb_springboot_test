@@ -14,6 +14,9 @@ import java.util.Objects;
  * 虚引用必须和引用队列 （ReferenceQueue）联合使用。
  * 作用：在这个被虚引用引用的对象被收集器回收时收到一个系统通知
  * 这个讲的很好：https://baijiahao.baidu.com/s?id=1688415473876693422&wfr=spider&for=pc
+ *
+ * Reference类源码分型：https://blog.csdn.net/weixin_42353186/article/details/112544002
+ *
  * @author cyb
  * @date 2022/3/8 下午4:53
  */
