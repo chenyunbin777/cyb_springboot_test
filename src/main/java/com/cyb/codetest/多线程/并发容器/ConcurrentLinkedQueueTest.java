@@ -1,5 +1,7 @@
 package com.cyb.codetest.多线程.并发容器;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -8,6 +10,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author cyb
  * @date 2021/1/12 2:12 下午
  */
+@Slf4j
 public class ConcurrentLinkedQueueTest {
 
     public static void main(String[] args) {
