@@ -1,0 +1,191 @@
+{
+  "index": {
+      "analysis": {
+        "filter": {
+          "common_stop": {
+            "type": "stop",
+            "stopwords_path": "stopwords/stopwords.dic"
+          },
+          "name_stop": {
+            "type": "stop",
+            "stopwords_path": "stopwords/name_stopwords.dic"
+          },
+          "extension_synonym": {
+            "type": "synonym",
+            "synonyms_path": "synonyms/extension_synonym.txt",
+            "lenient": "true"
+          }
+        },
+        "char_filter": {
+          "ascii": {
+            "pattern": "[^\\x00-\\xff]+",
+            "type": "pattern_replace",
+            "replacement": " "
+          },
+          "remove_ascii": {
+            "pattern": "[\\x00-\\xff]+",
+            "type": "pattern_replace",
+            "replacement": " "
+          }
+        },
+        "analyzer": {
+          "name_ik_max_word_remove_ascii": {
+            "filter": [
+              "lowercase",
+              "name_stop"
+            ],
+            "char_filter": [
+              "remove_ascii"
+            ],
+            "type": "custom",
+            "tokenizer": "ik_max_word"
+          },
+          "lowercase_keyword": {
+            "filter": [
+              "lowercase"
+            ],
+            "type": "custom",
+            "tokenizer": "keyword"
+          },
+          "common_ik_smart": {
+            "filter": [
+              "lowercase",
+              "common_stop"
+            ],
+            "type": "custom",
+            "tokenizer": "ik_smart"
+          },
+          "extension_synonym": {
+            "filter": [
+              "lowercase",
+              "extension_synonym"
+            ],
+            "type": "custom",
+            "tokenizer": "keyword"
+          },
+          "split_tag": {
+            "filter": [
+              "lowercase"
+            ],
+            "type": "custom",
+            "tokenizer": "split_tag"
+          },
+          "name_ascii_standard": {
+            "filter": [
+              "lowercase",
+              "name_stop"
+            ],
+            "char_filter": [
+              "ascii"
+            ],
+            "type": "custom",
+            "tokenizer": "standard"
+          },
+          "name_ascii_word": {
+            "filter": [
+              "word_delimiter",
+              "name_stop",
+              "lowercase"
+            ],
+            "char_filter": [
+              "ascii"
+            ],
+            "type": "custom",
+            "tokenizer": "whitespace"
+          },
+          "name_ik_smart": {
+            "filter": [
+              "lowercase",
+              "name_stop"
+            ],
+            "type": "custom",
+            "tokenizer": "ik_smart"
+          },
+          "name_remove_ascii": {
+            "filter": [
+              "lowercase",
+              "name_stop"
+            ],
+            "char_filter": [
+              "remove_ascii"
+            ],
+            "type": "custom",
+            "tokenizer": "whitespace"
+          },
+          "common_ik_max_word": {
+            "filter": [
+              "lowercase",
+              "common_stop"
+            ],
+            "type": "custom",
+            "tokenizer": "ik_max_word"
+          },
+          "name_ascii_ngram_2_2": {
+            "filter": [
+              "lowercase"
+            ],
+            "char_filter": [
+              "ascii"
+            ],
+            "type": "custom",
+            "tokenizer": "ngram_2_2"
+          },
+          "name_ik_max_word": {
+            "filter": [
+              "lowercase",
+              "name_stop"
+            ],
+            "type": "custom",
+            "tokenizer": "ik_max_word"
+          },
+          "name_ik_smart_remove_ascii": {
+            "filter": [
+              "lowercase",
+              "name_stop"
+            ],
+            "char_filter": [
+              "remove_ascii"
+            ],
+            "type": "custom",
+            "tokenizer": "ik_smart"
+          },
+          "split_email": {
+            "filter": [
+              "lowercase"
+            ],
+            "type": "custom",
+            "tokenizer": "split_email"
+          }
+        },
+        自定义分词器
+        "tokenizer": {
+          ngram分词机制实现index-time搜索推荐
+          "ngram_2_2": {
+            "token_chars": [
+              "letter",
+              "digit"
+            ],
+            "min_gram": "2",
+            "type": "ngram",
+            "max_gram": "2"
+          },
+          "split_email": {
+            "type": "char_group",
+            "tokenize_on_chars": [
+              "@",
+              "."
+            ]
+          },
+          "split_tag": {
+            "type": "char_group",
+            "tokenize_on_chars": [
+              "whitespace",   空格
+              "punctuation",  标点符号
+              "symbol"  符号
+            ]
+          }
+        }
+      }
+    }
+
+}
