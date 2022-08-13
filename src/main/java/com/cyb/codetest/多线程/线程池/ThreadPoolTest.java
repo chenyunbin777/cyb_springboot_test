@@ -15,7 +15,6 @@ public class ThreadPoolTest {
         //1 创建一个可重用固定个数的线程池，以共享的无界队列方式来运行这些线程。
         //keepALiveTime = 0
         ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
-
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(2, 2,
                 60L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(10),
