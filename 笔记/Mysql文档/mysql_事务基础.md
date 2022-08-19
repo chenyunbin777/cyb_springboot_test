@@ -57,3 +57,8 @@ https://blog.csdn.net/weixin_39625809/article/details/80707695
 > 注意 PROPAGATION_NESTED 与PROPAGATION_REQUIRES_NEW的区别：
 > * 由此可见, PROPAGATION_REQUIRES_NEW 和 PROPAGATION_NESTED 的最大区别在于, PROPAGATION_REQUIRES_NEW 完全是一个新的事务,
 > * 而 PROPAGATION_NESTED 则是外部事务的子事务, 如果外部事务 commit, 嵌套事务也会被 commit, 这个规则同样适用于 roll back.
+
+
+# 事务的保存点，回滚
+- savepoint a;
+- rollback to savepoint a;
