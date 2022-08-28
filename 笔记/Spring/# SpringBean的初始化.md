@@ -19,22 +19,35 @@
 
 
 原文链接：https://blog.csdn.net/zhangmingan123/article/details/111178263
-1 Spring 循环依赖如何解决？ 提前暴露 循环依赖对象的半成品
+# 1 Spring 循环依赖如何解决？ 提前暴露 循环依赖对象的半成品
 三级缓存：
-2 Spring通过三级缓存来解决。 为什么要使用三级缓存？二级缓存行不行？
-不行：
-成品放在singletonObjects中，半成品放在earlySingletonObjects中
-流程可以这样走：实例化A ->将半成品的A放入earlySingletonObjects中 ->填充A的属性时发现取不到B->实例化B->将半成品的A放入earlySingletonObjects中->从earlySingletonObjects中取出A填充B的属性->将成品B放入singletonObjects,并从earlySingletonObjects中删除B->将B填充到A的属性中->将成品A放入singletonObjects并删除earlySingletonObjects。
+# 2 Spring通过三级缓存来解决。 为什么要使用三级缓存？二级缓存行不行？
+- 不行：
+- 成品放在singletonObjects中，半成品放在earlySingletonObjects中
+- 流程可以这样走：
+    - 实例化A ->将半成品的A放入earlySingletonObjects中 ->填充A的属性时发现取不到B->
+    实例化B->将半成品的B放入earlySingletonObjects中->从earlySingletonObjects中取出A填充B的属性->将成品B放入singletonObjects,并从earlySingletonObjects中删除B->
+    将B填充到A的属性中->将成品A放入singletonObjects并删除earlySingletonObjects。
+    - 1 实例化 A，此时 A 还未完成属性填充和初始化方法（@PostConstruct）的执行，A 只是一个半成品。
+      2 为 A 创建一个 Bean工厂，并放入到 singletonFactories 中。
+      3 发现 A 需要注入 B 对象，但是一级、二级、三级缓存均为发现对象 B。
+      4 实例化 B，此时 B 还未完成属性填充和初始化方法（@PostConstruct）的执行，B 只是一个半成品。
+      5 为 B 创建一个 Bean工厂，并放入到 singletonFactories 中。
+      6 发现 B 需要注入 A 对象，此时在一级、二级未发现对象
+      A，但是在三级缓存中发现了对象 A，从三级缓存中得到对象 A，并将对象 A 放入二级缓存中，同时删除三级缓存中的对象 A。（注意，此时的 A
+      还是一个半成品，并没有完成属性填充和执行初始化方法）
+      7 将对象 A 注入到对象 B 中。
+      8 对象 B 完成属性填充，执行初始化方法，并放入到一级缓存中，同时删除二级缓存中的对象 B。（此时对象 B 已经是一个成品）
+      9 对象 A 得到对象B，将对象 B 注入到对象 A 中。（对象 A 得到的是一个完整的对象 B）
+      10 对象 A完成属性填充，执行初始化方法，并放入到一级缓存中，同时删除二级缓存中的对象 A。
+      原文链接：https://blog.csdn.net/cristianoxm/article/details/113246104
 这样的流程是线程安全的，**不过如果A上加个切面（AOP）**，这种做法就没法满足需求了，
 因为earlySingletonObjects中存放的都是原始对象，而我们需要注入的其实是A的代理对象。
 
 
-
-
-
-第一级缓存：Map<String, Object> singletonObjects：存储完整版的实例
-第二级缓存：Map<String, Object> earlySingletonObjects：存储半成品，没有赋初值的对象实例
-第三级缓存：Map<String, ObjectFactory<?>> singletonFactories：生成一个对象的代理，如果对象上有aop的实现就可以直接通过
+- 第一级缓存：Map<String, Object> singletonObjects：存储完整版的实例
+- 第二级缓存：Map<String, Object> earlySingletonObjects：存储半成品，没有赋初值的对象实例
+- 第三级缓存：Map<String, ObjectFactory<?>> singletonFactories：生成一个对象的代理，如果对象上有aop的实现就可以直接通过
 getObject()获取代理类。
 
 
@@ -84,7 +97,10 @@ public class B {
 三级缓存singletonFactories ： 单例对象工厂的cache
 
 
-`
+```
+Spring 在注入属性的时候是如何去获取依赖的呢？
+他是通过一个getSingleton()方法去获取所需要的 Bean 的。
+
 protected Object getSingleton(String beanName, boolean allowEarlyReference) {
     Object singletonObject = this.singletonObjects.get(beanName);
     //一级缓存为空并且这个bean是正在创建
@@ -106,7 +122,7 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
     }
     return (singletonObject != NULL_OBJECT ? singletonObject : null);
 }
-`
+```
 
 
 

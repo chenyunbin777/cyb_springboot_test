@@ -24,6 +24,7 @@
     
  4 cluster容错机制
     - failover：如果当前机器访问失败，可以使用retries = 3配置重试的次数，重试其他机器
+        - 
     - failfast：快速失败，返回异常
     - failsafe：快速失败，没有返回直接忽略
     - failback：如果调用失败，会定时重试，使用定时线程池，会将调用失败的请求保存到一个ConcurrentHashMap中。
@@ -92,9 +93,12 @@
  模板模式：一个抽象类：负责公共方法和抽象方法供给子类实现，实现抽象类的子类，可以实现自己的具体定义的抽象方法。
 
 
-
+# 客户端调用流程
+（路由和负载均衡由客户端实现）
 - 1 通过服务调用Proxy来触发Invoker的invoker调用
 - 2 我们通过Directory获取所有可以调用的一个Invoker的列表，我们通过用户配置的Router路由规则来筛选一遍Invoker
+    - org.apache.dubbo.rpc.cluster.Directory
+    - org.apache.dubbo.rpc.Invoker
 - 3 我们通过负载均衡策略来找到一个我们要去调用的Invoker。在这个invoker调用之前又会经过一个filter（处理上下文 限流 计数）
 -  我们根据cluster集群配置的 容错机制来处理（failover failsafe failfast）
 - 4 数据传输：使用nettyClient，
@@ -102,7 +106,7 @@
     - 对数据包进行序列化，然后传输到服务提者端
 -------------以上是客户端实现-------------
 - 5 服务提供者对数据包进行粘报拆包处理，然后在对完整的数据包进行**反序列化**
-- 6 然后根据服务端口，接口名字，版本号 分组 构造唯一的key，并且从对应的hashMap中取出对应的Exporter
+- 6 然后根据服务端口，接口名字，版本号 分组 构造唯一的key，并且从对应的hashMap中取出对应的**Exporter**
 并且通过线程池来进行业务调用
 - 7 服务提供者的服务的调用都是通过dispatcher线程池派发器来创建具有线程派发能力的ChannelHandler
 

@@ -807,7 +807,7 @@ redis：文件事件 业务事件，调整线程数
     
 - table默认大小是16，必须为2的幂
 - threshold为resize阈值，是table的长度*2/3的负载因子
-- ThreadLocalMap使用**线性探测法**来解决散列冲突，所以实际上Entry[]数组在程序逻辑上是作为一个环形存在的。
+- ThreadLocalMap使用**线性探测法**来解决散列冲突，所以实际上Entry[]数组在程序逻辑上是作为一个**环形存在**的。
 - 计算数组下标的方法是int i = firstKey.threadLocalHashCode & (INITIAL_CAPACITY - 1);
 threadLocalHashCode = nextHashCode（一个AtomicInteger变量）+ 0x61c88647
 每次计算nextHashCode都会+上一个0x61c88647，这个数与斐波那契散列的黄金分割数有关系。这样计算数组下标可以使分布更均匀，减少hash冲突。
@@ -844,7 +844,7 @@ threadLocalHashCode = nextHashCode（一个AtomicInteger变量）+ 0x61c88647
                     //1 先向前找到一个key为null 的记录下标
                     //2 先后找，如果找到了key，那么直接覆盖value即可以
                     //3 如果没有找到key，那么我们就新建一个Entry
-                    // 最后会遍历table 删除一些key过期的条目。
+                    // **最后会遍历table 删除一些key过期的条目**。
                      replaceStaleEntry(key, value, i);
                     return;
                 }

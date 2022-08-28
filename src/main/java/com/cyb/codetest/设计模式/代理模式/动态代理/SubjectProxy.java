@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
  * @date 2021/1/6 3:02 下午
  */
 public class SubjectProxy implements InvocationHandler {
+    //代理的接口
     private Subject subject;
 
     public SubjectProxy(Subject subject) {

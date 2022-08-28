@@ -5,6 +5,7 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * 按顺序输出线程 ABC的打印 使用ReentrantLock的Condition
  * @author cyb
  * @date 2021/3/29 11:57 上午
  */
@@ -16,7 +17,7 @@ public class ConditionTest {
     private static final Condition conditionA = lock.newCondition();
     private static final Condition conditionB = lock.newCondition();
     private static final Condition conditionC = lock.newCondition();
-    private static final int TIMES = 5; //循环次数
+    private static final int TIMES = 1; //循环次数
 
     static int count = 0;
 

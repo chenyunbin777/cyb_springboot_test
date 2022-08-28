@@ -14,6 +14,7 @@ public class ThreadPoolTest {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         //1 创建一个可重用固定个数的线程池，以共享的无界队列方式来运行这些线程。
         //keepALiveTime = 0
+        // keepAliveTime是多余的线程等待新任务的最长时间，超过这个时间多余的线程将被终止。
         ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(2, 2,
                 60L, TimeUnit.MILLISECONDS,

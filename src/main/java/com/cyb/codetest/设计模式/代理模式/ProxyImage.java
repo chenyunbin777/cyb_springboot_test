@@ -16,6 +16,9 @@ public class ProxyImage implements Image {
         this.fileName = fileName;
     }
 
+    /**
+     * 代理类实现接口具体方法，使用真实对象去调用
+     */
     @Override
     public void display() {
         if (realImage == null) {

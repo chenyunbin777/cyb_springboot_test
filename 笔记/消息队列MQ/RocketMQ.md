@@ -30,7 +30,59 @@ https://cloud.tencent.com/developer/article/1172240
             - 4 多 Master 多 Slave（同步双写）：每个 Master 配置一个 Slave，所以有多对 Master-Slave ，消息采用同步双写方式，主备都写成功才返回成功。
                 - 优点是：数据与服务都没有单点问题，Master 宕机时消息无延迟，服务与数据的可用性非常高。
                 - 缺点是：性能相对异步复制方式略低，发送消息的延迟会略高。
+                
+            - 5 复制（同步和异步）：复制指的是当消息发送到对应的master broker之后，如何将数据同步给对应的salve。
+            - 6 刷盘（同步和异步）：刷盘是指，数据发送到broker之后 如何将数据写入到磁盘中。
+            - 7 很重要：一个master可以配置多个salve 但是如果master宕机之后，也之会一个
+            slave中拉取消息，所以生产环境建议salve不要配置太多
+            - 9 broker关机恢复机制：
+                - （1）abort：我们正常启动mq是会创建一个abort空文件，正常关闭mq的时候会删除这个文件
+                但是当异常关闭的时候不会删除掉这个文件。
+                - （2）checkpoint：是保存broker正常存储各种数据的时间。
+                    - 数据日志存储时间：最后一条已经存储的Commit log的时间
+                    - consume queue：最后一条已经存储的consume queue索引的时间
+                    - index log：最后一条已经存储的index log时间
+            - 10 commit log异步复制流程
+                - HAService.AcceptSocketService（底层实现是java 的nio）:当Master broker启动的时候会启动这个线程服务去监听Slave的同步数据请求
+                并且创建一个HAConnection
+                - HAConnection（底层实现是java 的nio）：也会同时创建HAConnection.WriteSocketService 和 HAConnection.ReadSocketService
+                    - HAConnection.ReadSocketService（是一个线程） ：读取接受slave的同步数据请求，保存到HAConnection中
+                    - HAConnection.WriteSocketService（是一个线程）：将读取到的slave的同步数据请求，从Commit log中查询数据，并发送给salve。
+                    - volatile long slaveRequestOffset：表示salve请求同步的位点值，volatile保证多线程的可见性
+                    - volatile long slaveAckOffset：表示salve已经保存的位点值，保证多线程的可见性
+             
+            - 11 commit log同步复制流程 
+                - org.apache.rocketmq.store.CommitLog.submitReplicaRequest 中处理同步消息
+                - 1 BrokerRole配置为同步master SYNC_MASTER，如果salve是正常的，我们创建同步请求封装在GroupCommitRequest中。
+                - 2 HAService.GroupTransferService groupTransferService :会通过同步加锁（原子锁）的方式，将同步消息放入队列requestsWrite
+                中。
+                - 3 GroupTransferService中同步成功，每消费完成一个salve 就唤醒一个consumer消费者，并且设置设置flushOKFuture为true
+                - 同步逻辑在org.apache.rocketmq.store.ha.HAService.GroupTransferService.doWaitTransfer
+                - org.apache.rocketmq.store.ha.HAService.GroupTransferService.swapRequests：交换requestsWrite和requestsRead队列
+``` 
+                    public CompletableFuture<PutMessageStatus> submitReplicaRequest(AppendMessageResult result, MessageExt messageExt) {
+                      if (BrokerRole.SYNC_MASTER == this.defaultMessageStore.getMessageStoreConfig().getBrokerRole()) {
+                          HAService service = this.defaultMessageStore.getHaService();
+                          if (messageExt.isWaitStoreMsgOK()) {
+                              if (service.isSlaveOK((long)result.getWroteBytes() + result.getWroteOffset())) {
+                                  CommitLog.GroupCommitRequest request = new CommitLog.GroupCommitRequest(result.getWroteOffset() + (long)result.getWroteBytes(), (long)this.defaultMessageStore.getMessageStoreConfig().getSlaveTimeout());
+                                  service.putRequest(request);
+                                  service.getWaitNotifyObject().wakeupAll();
+                                  return request.future();
+                              }
+              
+                              return CompletableFuture.completedFuture(PutMessageStatus.SLAVE_NOT_AVAILABLE);
+                          }
+                      }
+              
+                      return CompletableFuture.completedFuture(PutMessageStatus.PUT_OK);
+                    }
+```
+                
+                
+                
     - NameServer ：用来保存 Broker 相关元信息并给 Producer 和 Consumer 查找 Broker 信息。
+    
         - 所以从功能上看应该是和 ZooKeeper 差不多，据说 RocketMQ 的早期版本确实是使用的 ZooKeeper ，后来改为了自己实现的 NameServer 。  
     - Tag：使用标签，同一业务模块不同目的的消息就可以用相同 Topic 而不同的 Tag 来标识。
 - MQ有什么不足之处么？
@@ -55,7 +107,7 @@ https://cloud.tencent.com/developer/article/1172240
 - 为什么写入文件这么快， 零拷贝，pageCache技术。减少了用户态和内核态数据的拷贝。
 直接通过java进程拷贝得到内核态的数据。
     - java.nio.MappedByteBuffer.java文件中实现了零拷贝技术。这需要操作系统底层的支持。
-    - 零拷贝的速度相当于内存操作，所以速度更快。不需要再去磁盘中读取数据。 
+    - 零拷贝的速度相当于**内存操作**，所以速度更快。不需要再去磁盘中读取数据。 
 
 ## MQ索引文件
 - consumer queue：消费队列，主要用于消费的拉取消息，更新消费位点。

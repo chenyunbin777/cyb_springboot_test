@@ -15,7 +15,7 @@
 如：把同步转换成异步请求。
 
 - 9 transport：网络传输层。NIO框架，对netty，mina进行封装，实现自己的IO传输。
-- 10 Serialize：序列化，Hession2为主，二进制字节流更小，传输更快。
+- 10 Serialize：序列化，**Hession2为主**，二进制字节流更小，传输更快。
 
 # 负载均衡
 - org.apache.dubbo.rpc.cluster.loadbalance.AbstractLoadBalance抽象类定义通用的功能
@@ -50,6 +50,7 @@
     - 通常是会用在服务状态更新后的广播。
 - 7 Available：最简单的方式，遍历所有服务列表，找到一个可用的节点调用直接返回。会有节点返回异常。
 ## Mock伪造返回数据
+- 可用作服务降级
 - 1 mock = force：return+null：强制服务返回null，不会进行RPC调用
 - 2 mock = fail：return+null：调用服务失败后返回null，会进行RPC调用。
 - 3 mock = throw：直接跑RpcException，不会RPC调用
@@ -114,14 +115,14 @@ public interface Transporter {
 
 
 # 高级特性
-- 1 group version
+- 1 group version： 同一个接口多个实现类，指定如何调用。
 - 2 参数回调：消费方调用服务方时，支持server能够异步回调到当前的client
     - 主要用于stub做热数据缓存
 - 隐式参数：消费方通过RpcContext.setAttachmant设置隐式参数，服务方RpcContext.getAttachmant获取
     - 应用：服务运行期动态改变属性值，动态路由，灰度发布场景
 - 3 异步调用： dubbo:reference async = "true" 异步消费服务方
 - 4 泛化调用：直接创建远程代理进行服务调用
-- 5 上下文信息：存在ThreadLocal中
+- 5 上下文信息：存在ThreadLocal中。
 - 6 telnet：登录进行简单的运维操作
 # 内部使用的设计模式
 - 1 模板模式：抽象类定义通用的实现method，提供抽象方法给子类来具体实现。

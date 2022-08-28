@@ -15,7 +15,8 @@ public class ReentrantLoackTest {
 
         try {
             if (reentrantLock.tryLock(3000, TimeUnit.MILLISECONDS)) {
-
+                System.out.println("获取锁成功");
+                reentrantLock.unlock();
             } else {
 
             }

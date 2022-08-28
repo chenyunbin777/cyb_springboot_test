@@ -16,16 +16,16 @@ package com.cyb.codetest.设计模式.装饰器模式.dubbo过滤器;
 public class TestMain {
 
     public static void main(String[] args) {
-//        InvokerInterface invoker = new Invoker();
-//        AbstractDecorator abstractDecorator1 = new AbstractDecoratorFilter1(invoker,new Filter1());
-//        abstractDecorator1.filter();
-
-//        AbstractInvokerDecorator abstractInvokerDecorator2 = new DecoratorFilter2(new DecoratorFilter1(new Invoker()));
-//        abstractInvokerDecorator2.invoke();
+        InvokerInterface invoker = new Invoker();
+        AbstractInvokerDecorator abstractDecorator1 = new DecoratorFilter1(invoker);
+        abstractDecorator1.invoke();
+        System.out.println("---------------");
+        AbstractInvokerDecorator abstractInvokerDecorator2 = new DecoratorFilter2(new DecoratorFilter1(new Invoker()));
+        abstractInvokerDecorator2.invoke();
 
         System.out.println("---------------");
-//        AbstractInvokerDecorator abstractInvokerDecorator3 = new DecoratorFilter3(new DecoratorFilter2(new DecoratorFilter1(new Invoker())));
-//        abstractInvokerDecorator3.invoke();
+        AbstractInvokerDecorator abstractInvokerDecorator3 = new DecoratorFilter3(new DecoratorFilter2(new DecoratorFilter1(new Invoker())));
+        abstractInvokerDecorator3.invoke();
 
 
     }
