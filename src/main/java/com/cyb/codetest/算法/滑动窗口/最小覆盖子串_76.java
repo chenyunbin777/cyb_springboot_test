@@ -14,7 +14,8 @@ public class 最小覆盖子串_76 {
 
     public static void main(String[] args) {
 
-        String minSubString = minWindow("aa", "aa");
+        String minSubString = minWindow("ADOBECODEBANC", "ABC");
+
         System.out.println(minSubString);
     }
 
@@ -47,13 +48,12 @@ public class 最小覆盖子串_76 {
             if (need.containsKey(right_element)) {
                 window.put(right_element, window.getOrDefault(right_element, 0) + 1);
                 //如果窗口中的c的字母个数与need中一样 vaild++
-                if (window.get(right_element) == need.get(right_element)) {
-                    valid++;
-
+                //本题大坑：由于Integer超过[-128,127]后用==就会失效，所以在比较的时候一定要用equals
+                if(window.get(right_element).equals(need.get(right_element))){
+                    valid ++;
                 }
             }
 
-            System.out.println(JSON.toJSONString(window));
 
             //判断左侧窗口是否要收缩
             while (valid == need.size() && left <= right) {
@@ -69,7 +69,7 @@ public class 最小覆盖子串_76 {
                 left++;
                 //如果存在t中的元素，需要从window中移除,
                 if (need.containsKey(left_element)) {
-                    if (window.get(left_element) == need.get(left_element)) {
+                    if (window.get(left_element).equals(need.get(left_element))) {
                         valid--;
                     }
                     window.put(left_element, window.getOrDefault(left_element, 0) - 1);
@@ -79,10 +79,6 @@ public class 最小覆盖子串_76 {
 
         }
 
-        if (len != Integer.MAX_VALUE) {
-            return s.substring(start, end);
-        }
-
-        return "";
+        return len != Integer.MAX_VALUE ? s.substring(start,end) : "";
     }
 }
