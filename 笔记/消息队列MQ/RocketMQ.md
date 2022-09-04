@@ -6,7 +6,10 @@ https://cloud.tencent.com/developer/article/1172240
     - 2 通过发布订阅模式，降低服务之间的耦合
     - 3 削峰，防止同一时间大量的请求发送到我们的consumer端，一时间处理不过来导致服务的异常。
     - 4 灵活可扩展性：RocketMQ 天然支持集群，其核心四组件（Name Server、Broker、Producer、Consumer）每一个都可以在没有单点故障的情况下进行水平扩展。
-    - 5 支持顺序消息：可以保证消息消费者按照消息发送的顺序对消息进行消费。顺序消息分为全局有序和局部有序，一般推荐使用局部有序，即生产者通过将某一类消息按顺序发送至同一个队列来实现。
+    - 5 支持顺序消息：可以保证消息消费者按照消息发送的顺序对消息进行消费。顺序消息分为全局有序和局部有序，
+    一般推荐使用局部有序，即生产者通过将某一类消息按顺序发送至同一个队列来实现。
+        - 分区有序：一个Topic可能会对应多个分区queueId，单个分区消费有序
+        - 全局有序：一个Topic设置一个分区即可
 -  RocketMQ 的部署结构图，里面涉及了 RocketMQ 核心的四大组件：Name Server、Broker、Producer、Consumer ，每个组件都可以部署成集群模式进行水平扩展。
     - 生产者（Producer）负责产生消息，生产者向消息服务器发送由业务应用程序系统生成的消息。 RocketMQ 提供了三种方式发送消息：同步、异步和单向。
         - 同步：同步发送指消息发送方发出数据后会在收到接收方发回响应之后才发下一个数据包。一般用于重要通知消息，例如重要通知邮件、营销短信。
@@ -33,8 +36,8 @@ https://cloud.tencent.com/developer/article/1172240
                 
             - 5 复制（同步和异步）：复制指的是当消息发送到对应的master broker之后，如何将数据同步给对应的salve。
             - 6 刷盘（同步和异步）：刷盘是指，数据发送到broker之后 如何将数据写入到磁盘中。
-            - 7 很重要：一个master可以配置多个salve 但是如果master宕机之后，也之会一个
-            slave中拉取消息，所以生产环境建议salve不要配置太多
+            - 7 很重要：一个master可以配置多个salve 但是如果master宕机之后，也只会一个
+            slave中拉取消息，**所以生产环境建议salve不要配置太多**
             - 9 broker关机恢复机制：
                 - （1）abort：我们正常启动mq是会创建一个abort空文件，正常关闭mq的时候会删除这个文件
                 但是当异常关闭的时候不会删除掉这个文件。
@@ -59,7 +62,7 @@ https://cloud.tencent.com/developer/article/1172240
                 - 3 GroupTransferService中同步成功，每消费完成一个salve 就唤醒一个consumer消费者，并且设置设置flushOKFuture为true
                 - 同步逻辑在org.apache.rocketmq.store.ha.HAService.GroupTransferService.doWaitTransfer
                 - org.apache.rocketmq.store.ha.HAService.GroupTransferService.swapRequests：交换requestsWrite和requestsRead队列
-``` 
+                ``` 
                     public CompletableFuture<PutMessageStatus> submitReplicaRequest(AppendMessageResult result, MessageExt messageExt) {
                       if (BrokerRole.SYNC_MASTER == this.defaultMessageStore.getMessageStoreConfig().getBrokerRole()) {
                           HAService service = this.defaultMessageStore.getHaService();
@@ -77,12 +80,12 @@ https://cloud.tencent.com/developer/article/1172240
               
                       return CompletableFuture.completedFuture(PutMessageStatus.PUT_OK);
                     }
-```
-                
-                
-                
+                ```
+                - 索引
+                    - Consume Queue：用于消费者拉取消息，更新消费点位offset，对应类ConsumeQueue
+                        - ConsumeQueue：物理点位 + 消息体大小 + Tag hash值
+                    - Index File：Hash索引，每一个消息都会有一个唯一key，主要是通过Topic + key 查询时使用,对应类IndexFile
     - NameServer ：用来保存 Broker 相关元信息并给 Producer 和 Consumer 查找 Broker 信息。
-    
         - 所以从功能上看应该是和 ZooKeeper 差不多，据说 RocketMQ 的早期版本确实是使用的 ZooKeeper ，后来改为了自己实现的 NameServer 。  
     - Tag：使用标签，同一业务模块不同目的的消息就可以用相同 Topic 而不同的 Tag 来标识。
 - MQ有什么不足之处么？

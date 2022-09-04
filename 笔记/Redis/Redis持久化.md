@@ -49,4 +49,7 @@ appendonly no  是否开启aof
 appendfsync everysec
 # appendfsync no
 
+aof存储的文件目录
+appenddirname "appendonlydir"
+
 ```
