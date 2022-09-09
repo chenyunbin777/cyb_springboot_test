@@ -1,6 +1,5 @@
 # Redis Slot概念
-在redis集群内部，采用slot槽位的逻辑管理方式， 集群内部共有16384(2的14次方)个Slot，集群内每个Redis Instance负责其中一部分的Slot的读写。一个Key到底属于哪个Slot，由分片算法：
-crc16(key) % 16384决定。也正是通过此分片算法，将不同的key以相对均匀的方式分配到不同的slot上。
+redis-trib
 
 # 集群部署
 - 0 Redis群集TCP端口
