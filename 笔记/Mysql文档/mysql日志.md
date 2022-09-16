@@ -32,6 +32,7 @@ mysql> show variables like 'Innodb_log_buffer_size';
 
 # 回滚日志（undo log）
 - 1 作用：保证数据的原子性，保存了事务发生之前的数据的一个版本，可以用于回滚，同时可以提供多版本并发控制下的读（MVCC），也即非锁定读
+- 也就是MVCC下的快照是通过undo log实现的
 mysql> show variables like '%undo%';
 +--------------------------+------------+
 | Variable_name            | Value      |
