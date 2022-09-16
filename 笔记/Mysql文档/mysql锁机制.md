@@ -25,8 +25,8 @@
     - 我们统一使用  select ... **for update**; 来加锁。
     - 举例：主键id：  5 7 11
     - 在mysql8.0.22版本下
-        - 1 SELECT * FROM `test` WHERE `id` BETWEEN 4 AND 11 FOR UPDATE; 锁定(4 11),则其他事务所有的insert都不被允许
-        - 2 SELECT * FROM `test` WHERE `id` BETWEEN 5 AND 11 FOR UPDATE; (-无穷,5) 可以插入数据，其他范围都不允许
+        - 1 SELECT * FROM `test` WHERE `id` BETWEEN 4 AND 11 FOR UPDATE; 锁定(4 11),**则其他事务所有的insert都不被允许**
+        - 2 SELECT * FROM `test` WHERE `id` BETWEEN 5 AND 11 FOR UPDATE; (-无穷,5) 可以插入数据，**其他范围都不允许**
         - 3 SELECT * FROM `test` WHERE `id` BETWEEN 5 AND 8 FOR UPDATE; (-无穷,5) (11,+无穷)都可以插入数据
         - 4 SELECT * FROM `test` WHERE `id` BETWEEN 5 AND 12 FOR UPDATE; (-无穷,5) 可以插入数据，其他范围都不允许
         

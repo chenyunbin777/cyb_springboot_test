@@ -53,7 +53,7 @@ public class DoubleColorBall {
         Map<String, Integer> redBallNumAndRate = new TreeMap<>();
         Map<String, Integer> blueBallNumAndRate = new TreeMap<>();
 
-        String filePath = "/Users/chenyunbin/Documents/我的idea项目/cyb_springboot_test/src/main/java/com/cyb/codetest/双色球/100day.txt";
+        String filePath = "/Users/chenyunbin/Documents/我的idea项目/cyb_springboot_test/src/main/java异常.md/com/cyb/codetest/双色球/100day.txt";
 
         FileReader fileReader = new FileReader(filePath);
         BufferedReader bufferedReader = new BufferedReader(fileReader);

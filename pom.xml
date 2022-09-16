@@ -105,7 +105,7 @@
         <!--        </dependency>-->
         <!--        <dependency>-->
         <!--            <groupId>mysql</groupId>-->
-        <!--            <artifactId>mysql-connector-java</artifactId>-->
+        <!--            <artifactId>mysql-connector-java异常.md</artifactId>-->
         <!--            <scope>runtime</scope>-->
         <!--        </dependency>-->
         <dependency>
@@ -230,7 +230,7 @@
             <version>2.5.1</version>
         </dependency>
 
-        <!-- 报错：java.lang.NoClassDefFoundError: org/apache/curator/framework/CuratorFrameworkFactory 需要的依赖-->
+        <!-- 报错：java异常.md.lang.NoClassDefFoundError: org/apache/curator/framework/CuratorFrameworkFactory 需要的依赖-->
         <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-framework</artifactId>

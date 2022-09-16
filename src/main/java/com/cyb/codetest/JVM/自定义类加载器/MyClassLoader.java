@@ -95,7 +95,7 @@ public class MyClassLoader extends ClassLoader {
      */
     public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
         //这个类class的路径
-        String classPath = "/Users/chenyunbin/Documents/我的idea项目/cyb_springboot_test/src/main/java/com/cyb/codetest/JVM/自定义类加载器/ClassLoaderClassFile.class";
+        String classPath = "/Users/chenyunbin/Documents/我的idea项目/cyb_springboot_test/src/main/java异常.md/com/cyb/codetest/JVM/自定义类加载器/ClassLoaderClassFile.class";
 
         MyClassLoader myClassLoader = new MyClassLoader(classPath);
         //类的全称

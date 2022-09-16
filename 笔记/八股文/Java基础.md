@@ -90,4 +90,15 @@ osgi是一个规范，并不是一个实现，目前OSGi规范的主流实现框
         - 底层结构：TreeMap是桶+红黑树的实现方式.TreeMap的底层结构就是一个数组,数组中每一个元素又是一个红黑树.
         当添加一个元素(key-value)的时候,根据key的hash值来确定插入到哪一个桶中(确定插入数组中的位置),
         当桶中有多个元素时,使用红黑树进行保存;
-    
+  
+  
+  
+# equels 与 hashcode的关系
+- 1、如果两个对象equals相等，那么这两个对象的HashCode一定也相同
+- 2、如果两个对象的HashCode相同，不代表两个对象就相同，只能说明这两个对象在散列存储结构中，存放于同一个位置
+# 为什么equals方法重写的话，建议也一起重写hashcode方法？
+- 比如：有个A类重写了equals方法，但是没有重写hashCode方法，看输出结果，对象a1和对象a2使用equals方法相等，
+按照上面的hashcode的用法，那么他们两个的hashcode肯定相等，但是这里由于没重写hashcode方法，他们两个hashcode并不一样，
+所以，我们在重写了equals方法后，尽量也重写了hashcode方法，通过一定的算法，使他们在equals相等时，也会有相同的hashcode值。
+  原文链接：https://blog.csdn.net/weixin_44364444/article/details/120054230
+  

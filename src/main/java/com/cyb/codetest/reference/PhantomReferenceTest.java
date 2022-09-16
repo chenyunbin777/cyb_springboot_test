@@ -47,7 +47,7 @@ public class PhantomReferenceTest {
         Reference obj = queue.remove();
 
         //这里的obj就是一个虚幻引用，那么如果获取到虚幻引用引用到的对象呢
-        //java.lang.ref.PhantomReference@7aec35a
+        //java异常.md.lang.ref.PhantomReference@7aec35a
         System.out.println("obj==="+obj);
         System.out.println("obj==="+JSON.toJSONString(obj));
 

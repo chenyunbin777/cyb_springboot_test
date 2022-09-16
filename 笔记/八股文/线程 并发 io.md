@@ -333,9 +333,28 @@ final void lock() {
             return false;
         }
 - 2.1.1 
+https://blog.csdn.net/weixin_30342639/article/details/107372644/
 !hasQueuedPredecessors()：这里主要是公平锁的执行逻辑（非公平锁只是没有!hasQueuedPredecessors() &&这个逻辑其他都一样）
 **公平锁的目的就是让想要获取锁的线程尽可能的都可以获得到锁**，尽量不出现有某一个线程一直在等待的情况
-那么AQS是怎么实现的呢？  主要是如果存在阻塞队列，下一次执行的线程要是阻塞队列的第一个Node.Thread。
+那么AQS是怎么实现的呢？  
+
+    - FairSync 公平锁，必须要去排队执行
+        -         final void lock() {
+                      acquire(1); //
+                  }
+
+    - NonfairSync 非公平锁，lock会先尝试是否可以获取到锁，如果可以获取到那么就相当于直接插队获取到锁资源直接执行，不需要排队。
+        - final void lock() {
+                      if (compareAndSetState(0, 1))
+                          setExclusiveOwnerThread(Thread.currentThread());
+                      else
+                          acquire(1);
+                  }
+
+
+
+
+主要是如果存在阻塞队列，下一次执行的线程要是阻塞队列的第一个Node.Thread。
 public final boolean hasQueuedPredecessors() {
 	// The correctness of this depends on head being initialized
 	// before tail and on head.next being accurate if the current
@@ -407,11 +426,16 @@ private Node addWaiter(Node mode) {
         try {
             boolean interrupted = false;
             for (;;) {
+                //设置当前p为当前节点node的前驱节点pred
                 final Node p = node.predecessor();
                 //这至少要判断两次，
                 //第一次自旋 死循环判断 在shouldParkAfterFailedAcquire中先将当前的status状态如果是0设置为-1
                 //第二次在判断当前节点的前驱节点是不是head，如果是就直接加锁好了，这里就不需要通过park()阻塞该线程了，
                 节省了线程切换的资源，**绝妙设计！！！！**
+                
+                **如果前一个节点是头节点**，才可以尝试获取资源，也就是实际上的CLH队列中的第一个节点
+                队列中只有第一个节点才有资格去尝试获取锁资源（FIFO），如果获取到了就不用被阻塞了
+                获取到了说明在此刻，之前的资源已经被释放了
                 if (p == head && tryAcquire(arg)) { 
                     //直接设置当前节点为head节点（Thread==null），
                     setHead(node);
@@ -419,8 +443,15 @@ private Node addWaiter(Node mode) {
                     failed = false;
                     return interrupted;
                 }
-                // 执行到这里，说明
-                // 已经尝试过获取锁了，但还是失败了（当然有可能是因为p != head）
+                
+               1 走到这里说明要么前一个节点不是head节点，要么是head节点但是尝试加锁失败。
+               2 此时将队列中当前节点之前的一些CANCELLED状态的节点剔除；
+               3 前一个节点状态如果为SIGNAL时，就会阻塞当前线程，这里的parkAndCheckInterrupt阻塞操作是很有意义的。
+               因为如果不阻塞的话，那么获取不到资源的线程可能会在这个死循环里面一直运行，会一直占用CPU资源
+               ————————————————
+               版权声明：本文为CSDN博主「天瑕」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+               原文链接：https://blog.csdn.net/weixin_30342639/article/details/107372644/
+                //parkAndCheckInterrupt()中会进行当前线程的阻塞
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     interrupted = true;
@@ -431,6 +462,7 @@ private Node addWaiter(Node mode) {
         }
     }
 - 2.2.3 判断线程的状态 0:初始状态  -1：阻塞状态（都是当前节点去设置前一个节点的阻塞状态）
+    - 方法 shouldParkAfterFailedAcquire(Node pred, Node node)
     - 参数1：pred 为当前线程node的前一个线程节点   参数2：当前线程节点
     - 问题1：为什么在这个方法中不直接判断waitStatus==0就直接park阻塞呢？
       将当前的线程的前一个节点waitStatus设置为-1，在下一次acquireQueued中的自旋，我们还会进行判断当前线程
@@ -446,6 +478,8 @@ private Node addWaiter(Node mode) {
         int ws = pred.waitStatus;
         if (ws == Node.SIGNAL)//  //waitStatus == -1这里返回true，来说明当前线程可以去进行park操作
             /*
+             * 如果前一个节点的状态是SIGNAL，意味着当前节点可以被安全地阻塞
+             *
              * This node has already set status asking a release
              * to signal it, so it can safely park.
              */
@@ -474,7 +508,7 @@ private Node addWaiter(Node mode) {
     }
 - 2.2.4 ：parkAndCheckInterrupt()：将当前线程睡眠，并且，醒来之后返回当前线程的中断状态。
     private final boolean parkAndCheckInterrupt() {
-        //阻塞当前相乘
+        //阻塞当前线程
         LockSupport.park(this);
         //返回的是当前线程的中断状态，但是interrupted方法会移除当前线程的中断状态
         //之后又在tryAcquire(arg)方法中的selfInterrupt()方法中有恢复的中断的状态，因为不能影响用户行为
@@ -494,7 +528,7 @@ private Node addWaiter(Node mode) {
                     if (compareAndSetHead(new Node()))
                         tail = head;
                 } else { //第二次自旋时，t = tail ！= null了 这时走到else。
-                    //1 将我们的当前几点的prev指向newNode节点，
+                    //1 将我们的当前节点的prev指向newNode节点，
                     node.prev = t;
                     //2 将node变为tail节点
                     //3 将newNode节点的next指向当前节点

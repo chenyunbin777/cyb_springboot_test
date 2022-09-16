@@ -60,7 +60,7 @@ public class RefectTest {
         //获取返回值泛型类
         Class realPatternType = (Class) actualTypeArgument;
         //返回方法method2 的返回值ArrayList<String> 的泛型类 String
-        //realPatternType：class java.lang.String
+        //realPatternType：class java异常.md.lang.String
         System.out.println("realPatternType："+realPatternType);
 
         //通过反射出来的对象obj来调用方法method2

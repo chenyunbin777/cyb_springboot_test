@@ -4,6 +4,8 @@ import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * Exchanger用于线程间进行通信、数据交换。Exchanger提供了一个同步点exchange方法，两个线程调用exchange方法时，无论调用时间先后，
+ * 两个线程会互相等到线程到达exchange方法调用点，此时两个线程可以交换数据，将本线程产出数据传递给对方。
  * @author cyb
  * @date 2021/1/18 6:57 下午
  */
