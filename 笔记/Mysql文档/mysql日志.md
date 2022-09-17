@@ -14,13 +14,16 @@ mysql> show variables like '%slow%';
 - set global slow_query_log=1 开启slow log
 
 # 2 重做日志（redo log）
+- 记录的是物理格式日志，记录的是mysql页数据的变化
+- 重做日志是在事务进行中不断的被写入的，这表现为日志并不是随事务提交的顺序进行写入的。
 - 作用：确保事务的持久性。
     - redo日志记录**事务执行后**的状态，用来恢复未写入data file的已成功事务更新的数据。
     防止在发生故障的时间点，尚有脏页未写入磁盘，在重启mysql服务的时候，根据redo log进行重做，从而达到事务的持久性这一特性。
-- 很重要一点，redo log是什么时候写盘的？前面说了是在事物开始之后逐步写盘的。
+- 很重要一点，redo log是什么时候写盘的？前面说了是**在事物开始之后逐步写盘的**。
 之所以说重做日志是在**事务开始之后**逐步写入重做日志文件，而不一定是事务提交才写入重做日志缓存，
 原因就是，重做日志有一个缓存区Innodb_log_buffer，Innodb_log_buffer的默认大小为8M(这里设置的16M),
-Innodb存储引擎先将重做日志写入innodb_log_buffer中。   
+- 在事务中，Innodb存储引擎先将重做日志写入innodb_log_buffer中，在提交的时候会进行一次数据同步（fsync），将缓冲区中的数据同步到
+重做日志文件中。   
 
 mysql> show variables like 'Innodb_log_buffer_size';
 +------------------------+----------+
@@ -51,7 +54,7 @@ mysql> show variables like '%undo%';
     
 # binlog
 - 用于复制，在主从复制中，从库利用主库上的binlog进行重播，实现主从同步。用于数据库的基于时间点的还原。
-- binlog是逻辑日志，可以简单认为记录的就是sql语句
+- binlog是逻辑日志，可以简单认为**记录的就是sql语句**
 - binlog的默认是保持时间由参数expire_logs_days配置，也就是说对于非活动的日志文件，在生成时间超过expire_logs_days配置的天数之后，会被自动删除。
 - canal：监听binlog 与 kafka结合 实时监听mysql数据的变化
 
