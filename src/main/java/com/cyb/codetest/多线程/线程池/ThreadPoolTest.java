@@ -72,7 +72,7 @@ public class ThreadPoolTest {
 
         //int corePoolSize, int maximumPoolSize, long keepAliveTime,
         //TimeUnit unit, BlockingQueue<Runnable> workQueue, String poolName
-        ThreadPoolMonitor threadPoolMonitor = new ThreadPoolMonitor(10, 100, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10), "cyb");
+        ThreadPoolMonitor threadPoolMonitor = new ThreadPoolMonitor(10, 100, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10), new RejectExceptionHandlerTest(), "cyb");
 
 
 //        for (;;) {

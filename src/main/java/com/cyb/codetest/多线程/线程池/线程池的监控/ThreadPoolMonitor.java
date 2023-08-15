@@ -48,9 +48,9 @@ public class ThreadPoolMonitor extends ThreadPoolExecutor {
      * @param poolName        线程池名称
      */
     public ThreadPoolMonitor(int corePoolSize, int maximumPoolSize, long keepAliveTime,
-                             TimeUnit unit, BlockingQueue<Runnable> workQueue, String poolName) {
+                             TimeUnit unit, BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler, String poolName) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
-                Executors.defaultThreadFactory(), poolName);
+                Executors.defaultThreadFactory(), handler, poolName);
     }
 
     /**
@@ -66,8 +66,8 @@ public class ThreadPoolMonitor extends ThreadPoolExecutor {
      */
     public ThreadPoolMonitor(int corePoolSize, int maximumPoolSize, long keepAliveTime,
                              TimeUnit unit, BlockingQueue<Runnable> workQueue,
-                             ThreadFactory threadFactory, String poolName) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+                             ThreadFactory threadFactory, RejectedExecutionHandler handler, String poolName) {
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
         this.startTimes = new ConcurrentHashMap<>();
         this.poolName = poolName;
     }
@@ -135,8 +135,8 @@ public class ThreadPoolMonitor extends ThreadPoolExecutor {
      * @param poolName 线程池名称
      * @return ExecutorService对象
      */
-    public static ExecutorService newFixedThreadPool(int nThreads, String poolName) {
-        return new ThreadPoolMonitor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(100), poolName);
+    public static ExecutorService newFixedThreadPool(int nThreads, String poolName, RejectedExecutionHandler handler) {
+        return new ThreadPoolMonitor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(100), handler, poolName);
     }
 
 
@@ -146,8 +146,8 @@ public class ThreadPoolMonitor extends ThreadPoolExecutor {
      * @param poolName 线程池名称
      * @return ExecutorService对象
      */
-    public static ExecutorService newCachedThreadPool(String poolName) {
-        return new ThreadPoolMonitor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), poolName);
+    public static ExecutorService newCachedThreadPool(String poolName, RejectedExecutionHandler handler) {
+        return new ThreadPoolMonitor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), handler, poolName);
     }
 
     /**

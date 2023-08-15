@@ -1,5 +1,5 @@
 # 脑裂问题
-- 1 follower与leadre之间的通信是通过心跳检测实现的，follower会注册Watcher在leader中**创建的临时文件**。一旦zookeeper发现
+- 1 follower与leader之间的通信是通过心跳检测实现的，follower会注册Watcher在leader中**创建的临时文件**。一旦zookeeper发现
 leader有问题了，会改变临时节点，然后zk就会发通知给各个follower，follower再调用对应的回调handler。
 
 - 2 **注意watch是一次性的，每次都需要重新注册**，并且客户端在会话异常结束时不会收到任何通知，而快速重连接时仍不影响接收通知。
@@ -29,8 +29,8 @@ leader有问题了，会改变临时节点，然后zk就会发通知给各个fol
 ##
 
 - 选主算法中的zxid是从内存数据库中取的最新事务id，事务操作是分两阶段的（提出阶段和提交阶段），
-    - 1) 提交阶段：leader生成提议并广播给followers , follower收到提议后先将事务写到本地事务日志，然后反馈ACK
-    - 2）提交阶段：leader收到半数以上的ACK后，再广播commit消息，同时将事务操作应用到内存中。
+    - 1) 提交阶段：leader生成提议并广播给followers , follower收到提议后先将事务**写到本地事务日志**，然后反馈ACK
+    - 2）提交阶段：leader收到半数以上的ACK后，再**广播commit消息**，同时将事务操作应用到内存中。
     - 可见，选主只是选出了内存数据是最新的节点，仅仅靠这个是无法保证已经在leader服务器上提交的事务最终被所有服务器都提交。
 比如leader发起提议P1,并收到半数以上follower关于P1的ACK后，在广播commit消息之前宕机了，
 选举产生的新leader之前是follower，未收到关于P1的commit消息，内存中是没有P1的数据。
@@ -64,8 +64,8 @@ dubbo.registry.address=zookeeper://zk6.prod.souche:2181?backup=zk7.prod.souche:2
 
 # zookeeper分布式锁
 - 独占锁：
-    - 创建锁：在zk上创建一个临时节点/exclusive_lock/lock,会保证同时只有一个一台服务器能够创建成功
-        - 其他没有获取的服务器会就需要到/exclusive_lock上注册一个子节点变更的Watcher（时间通知机制）。
+    - 创建锁：在zk上**创建一个临时节点**/exclusive_lock/lock,会保证同时只有一个一台服务器能够创建成功
+        - 其他没有获取的服务器会就需要到/exclusive_lock上**注册一个子节点变更的Watcher（时间通知机制）**。
     - 释放锁：
         - 1 执行完正常业务之后 
         - 2 创建临时节点的服务器发生宕机
@@ -94,7 +94,7 @@ dubbo.registry.address=zookeeper://zk6.prod.souche:2181?backup=zk7.prod.souche:2
 ## 分布式协调/通知
 - zk中特有的Watcher注册与异步通知机制，能够很好的实现分布式系统下的不同机器的，不同系统的协调与通知
     - 实现对数据变更 的**实时处理**
-    - 实现的方式：所有的应用服务器都会在zk上同一个数据节点注册一个监听器Watcher，
+    - 实现的方式：**所有的应用服务器都会在zk上同一个数据节点注册一个监听器Watcher**，
     如果数据发生变动之后，zk会主动告知所有监听的服务器有数据变更，他们就会主动拉取这种变更。
     
 ## 任务热备份（Mysql），还是作为通知的角色
@@ -103,7 +103,7 @@ dubbo.registry.address=zookeeper://zk6.prod.souche:2181?backup=zk7.prod.souche:2
 server1 server2....等，  id最小的为Running运行主机。
 - 所有Standby机器都需要注册一个"子节点列表变更"的Watcher监听，如果Running机器宕机与zk断开连接，
 其他Standby收到这个通知后，会进入下一轮Running机器选举。
-- 总结：还是 "小序号优先"的选举规则，主机宕机，会选取最小顺序号的机器来代替主机。
+- 总结：**还是 "小序号优先"的选举规则，主机宕机，会选取最小顺序号的机器来代替主机**。
     - 至少使用两台机器
 
 ## 冷备份
@@ -146,6 +146,10 @@ server1 server2....等，  id最小的为Running运行主机。
 
 - zk原
 - mysql什么时候不会用到索引
+  or between 范围查询
+  没有命中索引
+  关联表查询
+  
 - redis 持久化方式
 - spring的原理理
     - IOC AOP

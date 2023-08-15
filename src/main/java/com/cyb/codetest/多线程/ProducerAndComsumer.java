@@ -70,14 +70,14 @@ public class ProducerAndComsumer {
 
     public static void main(String[] args) {
         Thread thread = new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; ; i++) {
                 produce(10);
             }
 
         });
         thread.start();
         Thread thread2 = new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; ; i++) {
                 consume(10);
             }
 

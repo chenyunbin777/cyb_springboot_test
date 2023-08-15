@@ -4,6 +4,7 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
+ * 自定义异常处理方式
  * @author cyb
  * @date 2021/1/11 3:12 下午
  */

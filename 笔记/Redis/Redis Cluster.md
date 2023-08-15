@@ -51,7 +51,7 @@ redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 \
     - redis-cli -c -p 7000
 
 ## 多个键值需要落在一个slot上的问题如何破？
-   - 当执行多键值事务操作时，Redis不仅要求这些键值需要落在同一个Redis实例上，还要求落在同一个slot上。如何实现？
+   - 当执行**多键值事务操作**时，Redis不仅要求这些键值需要落在同一个Redis实例上，还要求落在同一个slot上。如何实现？
    - 解决方法还是从分片技术的原理上找。
    - 为了实现将key分到相同槽位，**就需要相同的hash值**，即相同的key。但key相同是不现实的，因为每个key都有不同的用途。例如user:user1:ids保存用户的ID，user:user1:contacts保存联系人的具体内容，两个key不可能同名。
 但仔细观察user:user1:ids和user:user1:contacts，两个key其实有相同的地方，即user1。能不能拿这一部分去计算hash呢？这就是 Hash Tag 。允许用key的部分子串来计算hash。

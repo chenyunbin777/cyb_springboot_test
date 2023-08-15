@@ -46,7 +46,7 @@ typedef struct dictEntry {
     - 总元素 * 10 < 桶的个数，也就是,填充率必须<10%，进行收缩
     - 所以会导致：Redis Rehash是导致Redis Master和Slave大量触发驱逐淘汰的根本原因。
 ## **Redis满容驱逐状态下，如何避免因Rehash而导致Redis抖动的这种问题？**
-- 我们在Redis Rehash源码实现的逻辑上，加上了一个判断条件，如果现有的剩余内存不够触发Rehash操作所需申请的内存大小，即不进行Resize操作
+- 我们在Redis Rehash源码实现的逻辑上，加上了一个判断条件，如果现有的**剩余内存不够触发Rehash操作所需申请的内存大小，即不进行Resize操作**
 - 通过提前运营进行规避，比如容量预估时将Rehash占用的内存考虑在内，或者通过监控定时扩容
 
 ## 渐进式 rehash

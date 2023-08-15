@@ -14,6 +14,65 @@
     - 1.7 ：resize是使用的头插法可能会造成循环链表的情况
     - 1.8 ：resize是使用的尾插发不会造成循环链表，但是也不是线程安全的
 
+
+`
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                   boolean evict) {
+        Node<K,V>[] tab; Node<K,V> p; int n, i;
+        if ((tab = table) == null || (n = tab.length) == 0)
+            n = (tab = resize()).length;
+            // 2 数组桶位置为null，新建一个节点
+        if ((p = tab[i = (n - 1) & hash]) == null)
+            tab[i] = newNode(hash, key, value, null);
+        else {  //3 如果计算的key的位置(n - 1) & hash 不为空
+            Node<K,V> e; K k;
+            //  4 判断当前位置存在元素，（hash相同 && key的地址相同） ||  key.equals(k)， 在Node中重写了equals方法。
+            if (p.hash == hash &&
+                ((k = p.key) == key || (key != null && key.equals(k))))
+                e = p;
+                // 5 如果是树形结构就去执行树形结构的put
+            else if (p instanceof TreeNode)
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+            else {
+                // 6 这里是变量桶节点的链表，已经说明该桶节点是存在元素的。
+                for (int binCount = 0; ; ++binCount) {
+                    // 7 如果遍历到链表的结尾之后，将key value插入链表
+                    if ((e = p.next) == null) {
+                        p.next = newNode(hash, key, value, null);
+                        // 8 如果链表的长度大于等于8 就将链表扩展为红黑树
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            treeifyBin(tab, hash);
+                        break;
+                    }
+                    
+                    // 8 如果在链表中找到了相同的key值的话，就替换掉，此时的e就是要替换掉的node节点
+                    if (e.hash == hash &&
+                        ((k = e.key) == key || (key != null && key.equals(k))))
+                        break;
+                    p = e;
+                }
+            }
+            // 9 替换掉oldValue值
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;
+                afterNodeAccess(e);
+                //存在key对应的value，返回oldValue
+                return oldValue;
+            }
+        }
+        // 10 记录HashMap的结构修改次数
+        ++modCount;
+        // 11  threshold == capacity * load factor, 如果到了容量的阈值，需要进行扩容
+        if (++size > threshold)
+            resize();
+        afterNodeInsertion(evict);
+        // 12 不存在key对应的value，返回null
+        return null;
+    }
+`
+
 # ConcurrentHashMap
 
 # 1.7
@@ -40,3 +99,6 @@ ConcurrentHashMap初始化时，计算出Segment数组的大小ssize和每个Seg
 1.8中使用一个volatile类型的变量baseCount记录元素的个数，当插入新数据或则删除数据时，会通过addCount()方法更新baseCount
 1、初始化时counterCells为空，在并发量很高时，如果存在两个线程同时执行CAS修改baseCount值，则失败的线程会继续执行方法体中的逻辑，使用CounterCell记录元素个数的变化；
 2、如果CounterCell数组counterCells为空，调用fullAddCount()方法进行初始化，并插入对应的记录数，通过CAS设置cellsBusy字段，只有设置成功的线程才能初始化CounterCell数组
+
+
+

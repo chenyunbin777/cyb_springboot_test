@@ -12,6 +12,7 @@ import java.util.Map;
  */
 @RestController
 @Slf4j
+@RequestMapping("/test")
 public class GetAllStackTraces {
 
     @RequestMapping("getAllStackTraces")

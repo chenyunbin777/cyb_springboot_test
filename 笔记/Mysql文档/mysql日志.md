@@ -14,8 +14,9 @@ mysql> show variables like '%slow%';
 - set global slow_query_log=1 开启slow log
 
 # 2 重做日志（redo log）
+- 在mysql的存储引擎层产生
 - 记录的是物理格式日志，记录的是mysql页数据的变化
-- 重做日志是在事务进行中不断的被写入的，这表现为日志并不是随事务提交的顺序进行写入的。
+- 重做日志是在**事务进行中**不断的被写入的，这表现为日志并不是随事务提交的顺序进行写入的。
 - 作用：确保事务的持久性。
     - redo日志记录**事务执行后**的状态，用来恢复未写入data file的已成功事务更新的数据。
     防止在发生故障的时间点，尚有脏页未写入磁盘，在重启mysql服务的时候，根据redo log进行重做，从而达到事务的持久性这一特性。
@@ -61,7 +62,7 @@ mysql> show variables like '%undo%';
 - innodb_undo_tablespaces参数必须大于或等于2，即回收（收缩）一个undo log日志文件时，要保证另一个undo log是可用的。   
     
 # binlog
-- 在Mysql数据库上层产生的，
+- 在Mysql数据库上层产生的，也就是mysql的Server层产生，所有的mysql存储引擎都可以实现
 - 写入磁盘时间：在事务提交完成后进行写入。
 - 用于复制，在主从复制中，从库利用主库上的binlog进行重播，实现主从同步。用于数据库的基于时间点的还原。
 - binlog是逻辑日志，可以简单认为**记录的就是sql语句**
