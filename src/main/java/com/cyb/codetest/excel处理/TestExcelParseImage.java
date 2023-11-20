@@ -61,7 +61,7 @@ public class TestExcelParseImage {
         System.out.println("imageId:"+imageId);
 
         //获取到rId
-        String rId = imageIdMappingMap.get(imageIdMappingMap);
+        String rId = imageIdMappingMap.get(imageId);
 
         //获取Excel压缩包中图片的位置，通过rId获取到图片路径，再通过这个path获取到图片文件
         String imagePath = imageMap.get(rId);
