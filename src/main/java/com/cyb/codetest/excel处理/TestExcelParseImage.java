@@ -38,7 +38,7 @@ public class TestExcelParseImage {
 
 
     public static void main(String[] args) throws IOException, InvalidFormatException {
-        File file =new File("/Users/chenyunbin/供应链中台线上化/图片测试/嵌入式图片测试.xlsx");
+        File file =new File("/Users/chenyunbin/供应链中台线上化/图片测试/三直播运营上传模板(2).xlsx");
 
         XSSFWorkbook workbook = new XSSFWorkbook(file);
         XSSFSheet sheet = workbook.getSheetAt(0);
@@ -57,16 +57,16 @@ public class TestExcelParseImage {
 
         //Cell中图片展示的信息：DISPIMG("ID_4DEC1821A20149449744B7778CEB2CD0",1)
         //获取
-        String imageId =  firstCell.getStringCellValue().substring(firstCell.getStringCellValue().indexOf("ID_") + 3, firstCell.getStringCellValue().lastIndexOf("\""));
-        System.out.println("imageId:"+imageId);
-
-        //获取到rId
-        String rId = imageIdMappingMap.get(imageId);
-
-        //获取Excel压缩包中图片的位置，通过rId获取到图片路径，再通过这个path获取到图片文件
-        String imagePath = imageMap.get(rId);
-        //处理图片逻辑
-        String imageUrl = handlePathImage(file, imagePath);
+//        String imageId =  firstCell.getStringCellValue().substring(firstCell.getStringCellValue().indexOf("ID_") + 3, firstCell.getStringCellValue().lastIndexOf("\""));
+//        System.out.println("imageId:"+imageId);
+//
+//        //获取到rId
+//        String rId = imageIdMappingMap.get(imageId);
+//
+//        //获取Excel压缩包中图片的位置，通过rId获取到图片路径，再通过这个path获取到图片文件
+//        String imagePath = imageMap.get(rId);
+//        //处理图片逻辑
+//        String imageUrl = handlePathImage(file, imagePath);
 
 
 //        zip4jWithNoPassword("/Users/chenyunbin/供应链中台线上化/图片测试/嵌入式图片测试.zip","/Users/chenyunbin/供应链中台线上化/图片测试/压缩");
@@ -114,11 +114,18 @@ public class TestExcelParseImage {
                 Element pic = cellImage.element("pic");
                 Element nvPicPr = pic.element("nvPicPr");
                 Element cNvPr = nvPicPr.element("cNvPr");
+                System.out.println("cNvPr:"+cNvPr.attribute("name"));
                 //图片id
                 String imageId = cNvPr.attribute("name").getValue().replace("ID_", "");
 //                        imageId = subImageId(imageId);
                 Element blipFill = pic.element("blipFill");
                 Element blip = blipFill.element("blip");
+
+                //防止空cell识别为图片
+                if(blip == null){
+                    continue;
+                }
+                System.out.println(blip.attribute("embed"));
                 //图片Rid
                 String imageRid = blip.attribute("embed").getValue();
                 //存入map中
