@@ -24,11 +24,18 @@ public class TestZipBomb {
 
 //        ZipSecureFile.setMinInflateRatio(0);
 
-        XSSFWorkbook workbook = new XSSFWorkbook(file);
-        XSSFSheet sheet = workbook.getSheetAt(0);
-        XSSFRow firstRow = sheet.getRow(1);
-        XSSFCell firstCell = firstRow.getCell(0);
+//        XSSFWorkbook workbook = new XSSFWorkbook(file);
+//        XSSFSheet sheet = workbook.getSheetAt(0);
+//        XSSFRow firstRow = sheet.getRow(1);
+//        XSSFCell firstCell = firstRow.getCell(0);
 
+//        String stringCellValue = "212121.0000";
+//        stringCellValue = stringCellValue.replaceAll("0+?$", "").replaceAll("[.]$", "");
+//
+//        System.out.println(stringCellValue);
+        BigDecimal zeroProfitPrice = new BigDecimal("0.0000");
+        String value = zeroProfitPrice.toPlainString().replaceAll("0+?$", "").replaceAll("[.]$", "");
+        System.out.println(value);
 
     }
 }
