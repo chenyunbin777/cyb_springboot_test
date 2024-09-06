@@ -86,7 +86,11 @@ https://cloud.tencent.com/developer/article/1172240
                         - ConsumeQueue：物理点位 + 消息体大小 + Tag hash值
                     - Index File：Hash索引，每一个消息都会有一个唯一key，主要是通过Topic + key 查询时使用,对应类IndexFile
     - NameServer ：用来保存 Broker 相关元信息并给 Producer 和 Consumer 查找 Broker 信息。
-        - 所以从功能上看应该是和 ZooKeeper 差不多，据说 RocketMQ 的早期版本确实是使用的 ZooKeeper ，后来改为了自己实现的 NameServer 。  
+        - 所以从功能上看应该是和 ZooKeeper 差不多，据说 RocketMQ 的早期版本确实是使用的 ZooKeeper ，后来改为了自己实现的 NameServer 。
+        - 1 Topic路由管理：最核心模块，决定了Topic分区数据会保存在哪个broker上，就是最为网络路由存在
+        - 2 Remoting通信模块：基于netty的网络通信封装，是RocketMQ的公共模块，担任MQ的各个模块间的通信任务。
+        - 3 定时任务模块：定时扫描宕机的broker，定时打印KV配置，定时扫描超时请求。  
+        - 4 KV管理模块，全剧配置
     - Tag：使用标签，同一业务模块不同目的的消息就可以用相同 Topic 而不同的 Tag 来标识。
 - MQ有什么不足之处么？
     - 消息重复问题，它不能保证不重复，只能保证正常情况下不重复
@@ -96,14 +100,32 @@ https://cloud.tencent.com/developer/article/1172240
 - 如何保证顺序消费
     - 同步：同步发送指消息发送方发出数据后会在收到接收方发回响应之后才发下一个数据包。
 
+
+#RocketMQ消息的生产者模式模式
+- 普通消息
+- 分区有序消息，但broker有序
+- 事务消息：half消息到broker（消费者不可见），生产者用户处理本地事务，成功则提交commit到broker，broker重新投递消息。
+失败，则rollback
+    - 如果生产者一直没有commit，broker会有一个检测机制，超时就会将half消息删除
+- 异步消息消息，生产者拥有毁掉方法
+
+
 ##RocketMQ消息的两种消费模型
 - 1 广播消费（Broadcasting）
 广播消费模式下，相同消息**消费者组（Consumer Group）**的每个消费者（Consumer）实例都接收全量的消息。
 即在该模型下，每一条消息会被消费者组内的每一个消费者成员消费读取到。
+    - 应用场景：刷新分布式缓存
 
-- 2 集群消费（Clustering）
+- 2 集群消费（Clustering） 常用模型
 集群消费模式下,相同**消费者组（Consumer Group）的每个消费者（Consumer）实例平均分摊消息。
 即该模型下，每条消息只能被消费者组（Consumer Group）**内的一个消费者成员消费读取到。
+
+
+## 可靠消费
+- 正常消费+重试+死信（Dead Lock Queue）
+- 正常消费失败，重试16次，如果还没有完成就放入死信队列，代人工处理
+- 死信队列topic：%DLQ%XXX
+- 重试队列topic：%RETRY%XXX
 
 ## MQ存储结构
 - commit log，每一个文件大小是1G，尾部通过offset相连。
@@ -146,3 +168,23 @@ https://cloud.tencent.com/developer/article/1172240
     
 
 
+# 如何处理消息堆积
+
+- 1.增加消费者数量：
+    . 通过增加消费者实例来提高消息处理能力。
+    . 确保消费者能够并行处理消息。
+  2.优化消费者处理逻辑：
+    . 检查并优化消息处理代码，提高单个消费者的处理效率。
+    . 考虑使用批量处理来减少网络开销。
+  3.使用背压（Back Pressure）机制：
+    . 实现一个机制，当消费者处理不过来时，可以向生产者发出信号减缓生产速度。
+  4.消息优先级处理：
+    . 实现消息优先级队列，优先处理重要消息。
+  5.临时存储和延迟处理：
+    . 将过多的消息临时存储到其他存储系统（如数据库），稍后再处理。
+  6.横向扩展：
+    . 增加服务器资源，扩展消费者集群。
+  7.监控和告警：
+    . 实施监控系统，及时发现并报告消息堆积问题。
+- 消费降级：减小消息的产生                     
+  原文链接：https://blog.csdn.net/u014109358/article/details/141363486
