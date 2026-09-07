@@ -5,6 +5,7 @@ import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.*;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.apache.rocketmq.remoting.exception.RemotingException;
@@ -41,7 +42,7 @@ public class ProducerTask {
     private void sendMsgToMq() {
         String str = "发送测试消息";
         System.out.println("producer:"+ JSON.toJSONString(producer));
-        Message msg;
+        org.apache.rocketmq.common.message.Message msg;
         try {
             msg = new Message("test-demo"
                     , "111"
@@ -109,8 +110,23 @@ public class ProducerTask {
 
             //4、事务消息
             TransactionMQProducer transactionMQProducer = new TransactionMQProducer("aaa");
-//            transactionMQProducer.setTransactionListener();
+            transactionMQProducer.setTransactionListener(new TransactionListener() {
 
+                //执行本地事务
+                @Override
+                public LocalTransactionState executeLocalTransaction(Message message, Object o) {
+
+                    //执行本地事务。。。。
+                    return LocalTransactionState.COMMIT_MESSAGE;
+                }
+
+                //检查本地事务处理
+                @Override
+                public LocalTransactionState checkLocalTransaction(MessageExt messageExt) {
+
+                    return LocalTransactionState.COMMIT_MESSAGE;
+                }
+            });
 //            transactionMQProducer.sendMessageInTransaction(msg, new LocalTransactionExecuter() {
 //                @Override
 //                public LocalTransactionState executeLocalTransactionBranch(Message message, Object o) {

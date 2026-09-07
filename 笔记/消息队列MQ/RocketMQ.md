@@ -103,7 +103,7 @@ https://cloud.tencent.com/developer/article/1172240
 
 #RocketMQ消息的生产者模式模式
 - 普通消息
-- 分区有序消息，但broker有序
+- 分区有序消息，broker有序
 - 事务消息：half消息到broker（消费者不可见），生产者用户处理本地事务，成功则提交commit到broker，broker重新投递消息。
 失败，则rollback
     - 如果生产者一直没有commit，broker会有一个检测机制，超时就会将half消息删除
@@ -181,7 +181,7 @@ https://cloud.tencent.com/developer/article/1172240
   4.消息优先级处理：
     . 实现消息优先级队列，优先处理重要消息。
   5.临时存储和延迟处理：
-    . 将过多的消息临时存储到其他存储系统（如数据库），稍后再处理。
+    . 将过多的消息临时存储到其他存储系统（如数据库），稍后再处理。 加入死信队列，手动处理。
   6.横向扩展：
     . 增加服务器资源，扩展消费者集群。
   7.监控和告警：
